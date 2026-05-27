@@ -2,16 +2,17 @@
 
 /* ─── Cosmic Theme ─── */
 :root {
-  --space-black: #0a0a0f;
-  --space-deep: #0d0d1a;
-  --star-white: #e8e8f0;
+  --space-black: #0d0814;
+  --space-deep: #120a1f;
+  --star-white: #f0edf5;
   --star-blue: #a5b4fc;
-  --nebula-purple: #7c3aed;
+  --star-gold: #fcd34d;
+  --nebula-purple: #8b5cf6;
   --nebula-cyan: #22d3ee;
   --text-primary: #e0dfe6;
   --text-secondary: #9493a0;
   --surface-glass: rgba(255, 255, 255, 0.04);
-  --border-glow: rgba(124, 58, 237, 0.2);
+  --border-glow: rgba(139, 92, 246, 0.2);
   --background: var(--space-black);
   --foreground: var(--text-primary);
 }
@@ -30,7 +31,11 @@
 
 /* ─── Base ─── */
 body {
-  background: var(--space-black);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08), transparent),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(34, 211, 238, 0.04), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139, 92, 246, 0.05), transparent),
+    var(--space-black);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, sans-serif;
   overflow-x: hidden;

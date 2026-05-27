@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+type StarColor = "white" | "purple" | "cyan" | "gold";
+
 interface Star {
   x: number;
   y: number;
@@ -9,6 +11,7 @@ interface Star {
   opacity: number;
   twinkleSpeed: number;
   twinkleOffset: number;
+  color: StarColor;
 }
 
 interface DriftStar extends Star {
@@ -26,6 +29,21 @@ interface Meteor {
   lastSpawn: number;
 }
 
+interface Nebula {
+  x: number;
+  y: number;
+  r: number;
+  color: string;
+  alpha: number;
+}
+
+const STAR_COLORS: Record<StarColor, string> = {
+  white: "200,210,255",
+  purple: "180,160,240",
+  cyan: "160,220,240",
+  gold: "250,220,180",
+};
+
 export default function CosmicBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -41,6 +59,7 @@ export default function CosmicBackground() {
     const farStars: Star[] = [];
     const nearStars: DriftStar[] = [];
     const meteors: Meteor[] = [];
+    const nebulas: Nebula[] = [];
 
     function resize() {
       width = window.innerWidth;
@@ -54,60 +73,95 @@ export default function CosmicBackground() {
       farStars.length = 0;
       nearStars.length = 0;
       meteors.length = 0;
+      nebulas.length = 0;
 
-      // Far stars: static, dense, tiny
-      for (let i = 0; i < 200; i++) {
+      // Nebula glows: soft purple/violet ambient patches
+      const nebulaColors = [
+        "139,92,246",   // purple
+        "99,102,241",   // indigo
+        "34,211,238",   // cyan
+        "168,85,247",   // violet
+      ];
+      for (let i = 0; i < 5; i++) {
+        nebulas.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 400 + 200,
+          color: nebulaColors[Math.floor(Math.random() * nebulaColors.length)],
+          alpha: Math.random() * 0.04 + 0.02,
+        });
+      }
+
+      // Far stars: static, dense, tiny, varied colors
+      for (let i = 0; i < 250; i++) {
         farStars.push({
           x: Math.random() * width,
           y: Math.random() * height,
           r: Math.random() * 1.2 + 0.3,
-          opacity: Math.random() * 0.6 + 0.2,
+          opacity: Math.random() * 0.7 + 0.2,
           twinkleSpeed: Math.random() * 0.02 + 0.005,
           twinkleOffset: Math.random() * Math.PI * 2,
+          color: randomColor(),
         });
       }
 
-      // Near stars: drifting, larger
-      for (let i = 0; i < 40; i++) {
+      // Near stars: drifting, larger, more colorful
+      for (let i = 0; i < 60; i++) {
         nearStars.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          r: Math.random() * 2 + 0.8,
-          opacity: Math.random() * 0.5 + 0.4,
-          twinkleSpeed: Math.random() * 0.01 + 0.002,
+          r: Math.random() * 2.5 + 0.8,
+          opacity: Math.random() * 0.6 + 0.3,
+          twinkleSpeed: Math.random() * 0.008 + 0.002,
           twinkleOffset: Math.random() * Math.PI * 2,
-          vx: (Math.random() - 0.5) * 0.15,
-          vy: (Math.random() - 0.5) * 0.15,
+          vx: (Math.random() - 0.5) * 0.12,
+          vy: (Math.random() - 0.5) * 0.12,
+          color: randomColor(),
         });
       }
 
       // Meteors: occasional streaks
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         meteors.push({
           x: Math.random() * width * 1.5,
           y: Math.random() * height * 0.5,
-          length: Math.random() * 100 + 60,
-          speed: Math.random() * 4 + 2,
-          opacity: Math.random() * 0.4 + 0.3,
-          delay: Math.random() * 8000 + 2000,
+          length: Math.random() * 120 + 80,
+          speed: Math.random() * 3 + 2,
+          opacity: Math.random() * 0.5 + 0.3,
+          delay: Math.random() * 8000 + 3000,
           lastSpawn: performance.now(),
         });
       }
     }
 
+    function randomColor(): StarColor {
+      const colors: StarColor[] = ["white", "white", "white", "purple", "cyan", "gold"];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
     function draw(time: number) {
       ctx!.clearRect(0, 0, width, height);
 
-      // Far stars (static twinkle)
+      // Nebula glows: soft ambient patches of colored light
+      for (const n of nebulas) {
+        const gradient = ctx!.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+        gradient.addColorStop(0, `rgba(${n.color},${n.alpha.toFixed(3)})`);
+        gradient.addColorStop(0.5, `rgba(${n.color},${(n.alpha * 0.5).toFixed(3)})`);
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+        ctx!.fillStyle = gradient;
+        ctx!.fillRect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
+      }
+
+      // Far stars (static twinkle, varied colors)
       for (const s of farStars) {
         const alpha = s.opacity * (0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.twinkleOffset));
-        ctx!.fillStyle = `rgba(200,210,255,${alpha.toFixed(2)})`;
+        ctx!.fillStyle = `rgba(${STAR_COLORS[s.color]},${alpha.toFixed(2)})`;
         ctx!.beginPath();
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx!.fill();
       }
 
-      // Near stars (drift + twinkle)
+      // Near stars (drift + twinkle + glow halos)
       for (const s of nearStars) {
         s.x += s.vx;
         s.y += s.vy;
@@ -117,18 +171,27 @@ export default function CosmicBackground() {
         if (s.y > height) s.y = 0;
 
         const alpha = s.opacity * (0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.twinkleOffset));
-        ctx!.fillStyle = `rgba(180,200,255,${alpha.toFixed(2)})`;
+
+        // Glow halo (larger radius, lower opacity)
+        if (s.r > 1.2 && alpha > 0.5) {
+          const haloGradient = ctx!.createRadialGradient(s.x, s.y, s.r * 0.5, s.x, s.y, s.r * 5);
+          haloGradient.addColorStop(0, `rgba(${STAR_COLORS[s.color]},${(alpha * 0.2).toFixed(2)})`);
+          haloGradient.addColorStop(1, "rgba(0,0,0,0)");
+          ctx!.fillStyle = haloGradient;
+          ctx!.beginPath();
+          ctx!.arc(s.x, s.y, s.r * 5, 0, Math.PI * 2);
+          ctx!.fill();
+        }
+
+        // Star core
+        const coreGradient = ctx!.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+        coreGradient.addColorStop(0, `rgba(255,255,255,${alpha.toFixed(2)})`);
+        coreGradient.addColorStop(0.3, `rgba(${STAR_COLORS[s.color]},${alpha.toFixed(2)})`);
+        coreGradient.addColorStop(1, "rgba(0,0,0,0)");
+        ctx!.fillStyle = coreGradient;
         ctx!.beginPath();
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx!.fill();
-
-        // Subtle glow around brighter stars
-        if (s.r > 1.5 && alpha > 0.6) {
-          ctx!.fillStyle = `rgba(124,58,237,${(alpha * 0.15).toFixed(2)})`;
-          ctx!.beginPath();
-          ctx!.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
-          ctx!.fill();
-        }
       }
 
       // Meteors
@@ -148,10 +211,11 @@ export default function CosmicBackground() {
         }
 
         const gradient = ctx!.createLinearGradient(m.x, m.y, m.x + m.length, m.y - m.length * 0.7);
-        gradient.addColorStop(0, `rgba(255,255,255,${m.opacity.toFixed(2)})`);
-        gradient.addColorStop(1, "rgba(255,255,255,0)");
+        gradient.addColorStop(0, `rgba(255,240,255,${m.opacity.toFixed(2)})`);
+        gradient.addColorStop(0.3, `rgba(180,160,240,${(m.opacity * 0.6).toFixed(2)})`);
+        gradient.addColorStop(1, "rgba(139,92,246,0)");
         ctx!.strokeStyle = gradient;
-        ctx!.lineWidth = 1;
+        ctx!.lineWidth = 1.2;
         ctx!.beginPath();
         ctx!.moveTo(m.x, m.y);
         ctx!.lineTo(m.x + m.length, m.y - m.length * 0.7);

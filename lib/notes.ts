@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { notes, noteContent, noteLinks, noteTags, tags } from "./schema";
+import { notes, noteLinks, noteTags, tags } from "./schema";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
@@ -62,11 +62,7 @@ export async function getNoteBySlug(slug: string) {
   if (!note) return null;
 
   let content = await blobGet(note.cosKey);
-  if (content === null) {
-    const [nc] = await db.select({ rawMarkdown: noteContent.rawMarkdown })
-      .from(noteContent).where(eq(noteContent.noteId, note.id)).limit(1);
-    content = nc?.rawMarkdown || "";
-  }
+  if (content === null) content = "";
 
   const noteTagList = await db.select({ tag: tags })
     .from(noteTags).innerJoin(tags, eq(noteTags.tagId, tags.id))
@@ -122,12 +118,6 @@ export async function createNote(data: {
     updatedAt: now,
   });
 
-  await db.insert(noteContent).values({
-    noteId: id,
-    plainText,
-    rawMarkdown: data.content,
-  });
-
   await blobPut(cosKey, data.content);
 
   if (data.tagIds?.length) {
@@ -162,7 +152,6 @@ export async function updateNote(slug: string, data: {
   if (data.content !== undefined) {
     const plainText = stripMarkdown(data.content);
     const key = updates.slug ? `notes/${updates.slug}.md` : existing.cosKey;
-    await db.update(noteContent).set({ plainText, rawMarkdown: data.content }).where(eq(noteContent.noteId, existing.id));
     await blobPut(key, data.content);
     await db.update(notes).set({ wordCount: plainText.length }).where(eq(notes.id, existing.id));
   }
@@ -183,7 +172,6 @@ export async function deleteNote(slug: string) {
   const note = await getNoteBySlug(slug);
   if (!note) return false;
 
-  await db.delete(noteContent).where(eq(noteContent.noteId, note.id));
   await blobDelete(note.cosKey);
   await db.delete(noteLinks).where(eq(noteLinks.sourceNoteId, note.id));
   await db.delete(noteLinks).where(eq(noteLinks.targetNoteId, note.id));

@@ -96,13 +96,6 @@ export const noteLinksRelations = relations(noteLinks, ({ one }) => ({
   targetNote: one(notes, { fields: [noteLinks.targetNoteId], references: [notes.id], relationName: "targetLinks" }),
 }));
 
-// ─── Full-text search content ───
-export const noteContent = mysqlTable("note_content", {
-  noteId: varchar("note_id", { length: 36 }).primaryKey(),
-  plainText: text("plain_text").notNull(),
-  rawMarkdown: text("raw_markdown").notNull(),
-});
-
 // ─── Sources (immutable reference materials) ───
 export const sources = mysqlTable("sources", {
   id: varchar("id", { length: 36 }).primaryKey(),

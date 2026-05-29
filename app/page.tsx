@@ -16,7 +16,7 @@ export default function HomePage() {
       </div>
       <Link
         href="/explore"
-        className="mt-12 inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-6 py-3 text-sm font-medium text-white shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:bg-nebula-purple transition-all"
+        className="mt-12 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-transparent px-6 py-3 text-sm font-medium text-white/80 hover:text-white hover:border-white/40 hover:shadow-[0_0_24px_rgba(255,255,255,0.15)] transition-all"
       >
         开始探索
       </Link>

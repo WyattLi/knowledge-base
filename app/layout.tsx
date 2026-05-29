@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import CosmicBackground from "@/components/background/CosmicBackground";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "Knowledge Base — 个人知识库",
@@ -12,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN" className="h-full antialiased">
       <body className="min-h-full flex flex-col relative">
         <CosmicBackground />
-        <main className="relative z-10 flex-1">{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

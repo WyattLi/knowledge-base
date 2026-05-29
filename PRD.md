@@ -22,6 +22,7 @@
 | 部署 | EdgeOne Pages | 全栈模式，API Routes 自动转为云函数 |
 | 开发环境 | windows 11
 
+
 ## Architecture
 
 ### 三层架构（借鉴 LLM Wiki）

@@ -62,14 +62,3 @@ body {
   box-shadow: 0 0 12px rgba(124, 58, 237, 0.3);
 }
 
-/* ─── Star twinkle animation ─── */
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-/* ─── Meteor animation ─── */
-@keyframes meteor {
-  0% { transform: translateX(0) translateY(0); opacity: 1; }
-  100% { transform: translateX(-300px) translateY(300px); opacity: 0; }
-}

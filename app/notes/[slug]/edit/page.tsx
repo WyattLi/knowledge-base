@@ -1,0 +1,25 @@
+import { notFound } from "next/navigation";
+import { getNoteBySlug } from "@/lib/notes";
+import { NoteEditor } from "@/components/notes/NoteEditor";
+
+export default async function EditNotePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const note = await getNoteBySlug(slug);
+  if (!note) notFound();
+
+  return (
+    <div className="max-w-4xl mx-auto px-6 py-8">
+      <h1 className="text-2xl font-bold text-text-primary mb-8">编辑笔记</h1>
+      <NoteEditor
+        noteSlug={slug}
+        initialData={{
+          title: note.title,
+          content: note.content,
+          categoryId: note.categoryId || "",
+          status: note.status || "published",
+          tagIds: (note.tags as any[])?.map((t: any) => t.id) || [],
+        }}
+      />
+    </div>
+  );
+}

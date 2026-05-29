@@ -45,7 +45,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
                 </div>
                 <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
                   <span>{note.wordCount} 字</span>
-                  <span>{new Date(note.updatedAt).toLocaleDateString("zh-CN")}</span>
+                  <span>{new Date(note.updatedAt!).toLocaleDateString("zh-CN")}</span>
                 </div>
               </Link>
             </div>

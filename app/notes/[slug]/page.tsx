@@ -28,7 +28,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
 
         <div className="flex items-center gap-4 text-sm text-text-muted mb-8">
           <span>{note.wordCount} 字</span>
-          <span>更新于 {new Date(note.updatedAt).toLocaleDateString("zh-CN")}</span>
+          <span>更新于 {new Date(note.updatedAt!).toLocaleDateString("zh-CN")}</span>
           {note.status !== "published" && (
             <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs">
               {note.status === "draft" ? "草稿" : "已归档"}

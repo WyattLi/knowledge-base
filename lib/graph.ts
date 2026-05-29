@@ -60,7 +60,7 @@ export async function getGraphData(): Promise<{ nodes: GraphNode[]; edges: Graph
   const tagsByNote = new Map<string, { id: string; name: string; slug: string; color: string }[]>();
   for (const t of allTags) {
     if (!tagsByNote.has(t.noteId)) tagsByNote.set(t.noteId, []);
-    tagsByNote.get(t.noteId)!.push({ id: t.tagId, name: t.tagName, slug: t.tagSlug, color: t.tagColor });
+    tagsByNote.get(t.noteId)!.push({ id: t.tagId, name: t.tagName, slug: t.tagSlug!, color: t.tagColor! });
   }
 
   const nodes: GraphNode[] = allNotes.map(n => ({
@@ -69,7 +69,7 @@ export async function getGraphData(): Promise<{ nodes: GraphNode[]; edges: Graph
     slug: n.slug,
     categoryId: n.categoryId,
     tags: tagsByNote.get(n.id) || [],
-    wordCount: n.wordCount,
+    wordCount: n.wordCount ?? 0,
     citationCount: citationCount.get(n.id) || 0,
     linkCount: (citationCount.get(n.id) || 0) + (outgoingCount.get(n.id) || 0),
   }));

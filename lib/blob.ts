@@ -14,12 +14,8 @@ function getBlobStore() {
 }
 
 export async function blobPut(key: string, content: string): Promise<void> {
-  try {
-    const store = getBlobStore();
-    await store.set(key, content);
-  } catch (e: any) {
-    console.warn("[blob] put failed:", e.message);
-  }
+  const store = getBlobStore();
+  await store.set(key, content);
 }
 
 export async function blobGet(key: string): Promise<string | null> {

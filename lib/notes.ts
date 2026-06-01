@@ -106,6 +106,8 @@ export async function createNote(data: {
   const plainText = stripMarkdown(data.content);
   const cosKey = `notes/${slug}.md`;
 
+  await blobPut(cosKey, data.content);
+
   await db.insert(notes).values({
     id,
     title: data.title,
@@ -117,8 +119,6 @@ export async function createNote(data: {
     createdAt: now,
     updatedAt: now,
   });
-
-  await blobPut(cosKey, data.content);
 
   if (data.tagIds?.length) {
     await db.insert(noteTags).values(

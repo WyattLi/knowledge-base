@@ -28,6 +28,14 @@ export async function blobGet(key: string): Promise<string | null> {
   }
 }
 
+export async function blobMove(oldKey: string, newKey: string): Promise<void> {
+  const content = await blobGet(oldKey);
+  if (content !== null) {
+    await blobPut(newKey, content);
+    await blobDelete(oldKey);
+  }
+}
+
 export async function blobDelete(key: string): Promise<void> {
   try {
     const store = getBlobStore();

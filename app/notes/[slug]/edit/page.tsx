@@ -13,8 +13,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ slug:
   if (!note) notFound();
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <h1 className="text-2xl font-bold text-text-primary mb-8">编辑笔记</h1>
+    <div className="max-w-4xl mx-auto px-6 py-4 h-full flex flex-col">
       <NoteEditor
         noteSlug={slug}
         initialData={{

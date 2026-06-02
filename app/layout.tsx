@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" className="h-full antialiased">
-      <body className="min-h-full flex flex-col relative">
+      <body className="h-full flex flex-col relative overflow-hidden">
         <CosmicBackground />
         <AppShell>{children}</AppShell>
       </body>

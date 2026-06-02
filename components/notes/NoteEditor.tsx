@@ -72,60 +72,67 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
   const treeOptions = flattenTree(allCategories).map(c => ({ cat: c, depth: c.depth }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">{error}</div>
+        <div className="shrink-0 mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
-      <div>
+      {/* Header: title + meta + actions */}
+      <div className="shrink-0 space-y-4 mb-4">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="笔记标题"
-          className="w-full glass-input rounded-xl px-4 py-3 text-lg font-medium text-text-primary placeholder:text-text-muted"
+          className="w-full glass rounded-xl px-4 py-2.5 text-lg font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
         />
+
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex gap-2 items-center">
+            <label className="text-xs text-text-muted">分类</label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="glass rounded-lg px-2.5 py-1.5 text-xs text-text-primary"
+            >
+              <option value="">无</option>
+              {treeOptions.map(({ cat, depth }) => (
+                <option key={cat.id} value={cat.id}>
+                  {"  ".repeat(depth)}{cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex gap-2 items-center">
+            <label className="text-xs text-text-muted">状态</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="glass rounded-lg px-2.5 py-1.5 text-xs text-text-primary"
+            >
+              <option value="published">已发布</option>
+              <option value="draft">草稿</option>
+            </select>
+          </div>
+
+          <div className="flex-1 flex justify-end gap-2">
+            <Button type="submit" disabled={saving} size="sm">
+              {saving ? "保存中..." : noteSlug ? "更新" : "创建"}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>取消</Button>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">分类</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-text-primary"
-          >
-            <option value="">无分类</option>
-            {treeOptions.map(({ cat, depth }) => (
-              <option key={cat.id} value={cat.id}>
-                {"  ".repeat(depth)}{cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="min-w-[150px]">
-          <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">状态</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-text-primary"
-          >
-            <option value="published">已发布</option>
-            <option value="draft">草稿</option>
-            <option value="archived">已归档</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">标签</label>
-        <div className="flex flex-wrap gap-1.5">
+      {/* Tags */}
+      <div className="shrink-0 mb-3">
+        <div className="flex flex-wrap gap-1">
           {allTags.map(tag => (
             <button
               type="button"
               key={tag.id}
               onClick={() => toggleTag(tag.id)}
-              className="px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+              className="px-2 py-0.5 rounded-full text-xs font-medium transition-all"
               style={{
                 backgroundColor: selectedTags.includes(tag.id) ? tag.color + "33" : "transparent",
                 color: selectedTags.includes(tag.id) ? tag.color : "var(--text-muted)",
@@ -135,26 +142,16 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
               {tag.name}
             </button>
           ))}
-          {allTags.length === 0 && <span className="text-xs text-text-muted">暂无标签，请先在侧边栏创建</span>}
         </div>
       </div>
 
-      <div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Markdown 内容..."
-          rows={20}
-          className="w-full glass-input rounded-xl px-4 py-3 text-sm text-text-primary font-mono placeholder:text-text-muted resize-y"
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={saving}>
-          {saving ? "保存中..." : noteSlug ? "更新笔记" : "创建笔记"}
-        </Button>
-        <Button type="button" variant="secondary" onClick={() => router.back()}>取消</Button>
-      </div>
+      {/* Content: fills remaining space */}
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Markdown 内容..."
+        className="flex-1 w-full glass rounded-xl p-4 text-sm text-text-primary font-mono placeholder:text-text-muted resize-none focus:outline-none min-h-[300px]"
+      />
     </form>
   );
 }

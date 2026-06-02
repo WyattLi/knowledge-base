@@ -3,7 +3,8 @@ import { notes, noteLinks, noteTags, tags, categories } from "./schema";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
-import { blobPut, blobGet, blobDelete } from "./blob";
+import { blobPut, blobGet, blobDelete, blobMove } from "./blob";
+import { makeNoteKey } from "./categories";
 
 /** Extract internal link targets from markdown: [[target]] and [text](target) — skips http URLs */
 function extractLinks(content: string): { target: string; context: string }[] {
@@ -156,7 +157,7 @@ export async function createNote(data: {
   const slug = makeSlug(data.title);
   const now = new Date();
   const plainText = stripMarkdown(data.content);
-  const cosKey = `notes/${slug}.md`;
+  const cosKey = await makeNoteKey(data.categoryId || null, slug);
 
   await blobPut(cosKey, data.content);
 
@@ -194,21 +195,40 @@ export async function updateNote(slug: string, data: {
   if (!existing) return null;
 
   const updates: any = { updatedAt: new Date() };
+  let newKey: string | null = null;
+
   if (data.title !== undefined) {
     updates.title = data.title;
     updates.slug = makeSlug(data.title);
   }
   if (data.categoryId !== undefined) updates.categoryId = data.categoryId || null;
+
+  // Compute new key if slug or category changed, or if key is stale (old format)
+  const newSlug = updates.slug ?? existing.slug;
+  const newCatId = updates.categoryId !== undefined ? (updates.categoryId || null) : existing.categoryId;
+  const expectedKey = await makeNoteKey(newCatId, newSlug);
+  if (expectedKey !== existing.cosKey) {
+    newKey = expectedKey;
+    updates.cosKey = newKey;
+  }
+
   if (data.status !== undefined) updates.status = data.status;
 
   await db.update(notes).set(updates).where(eq(notes.id, existing.id));
 
   if (data.content !== undefined) {
     const plainText = stripMarkdown(data.content);
-    const key = updates.slug ? `notes/${updates.slug}.md` : existing.cosKey;
+    const key = newKey ?? existing.cosKey;
+    // If key changed but content didn't, move the blob; otherwise write to new key
+    if (newKey && existing.cosKey !== newKey) {
+      await blobMove(existing.cosKey, newKey);
+    }
     await blobPut(key, data.content);
     await db.update(notes).set({ wordCount: plainText.length }).where(eq(notes.id, existing.id));
     await syncNoteLinks(existing.id, data.content);
+  } else if (newKey && existing.cosKey !== newKey) {
+    // Slug/category changed but content didn't — move the blob
+    await blobMove(existing.cosKey, newKey);
   }
 
   if (data.tagIds !== undefined) {

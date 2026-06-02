@@ -8,8 +8,7 @@ export default async function NewNotePage() {
   if (!await isAuthenticatedServer()) redirect("/notes");
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <h1 className="text-2xl font-bold text-text-primary mb-8">新建笔记</h1>
+    <div className="max-w-4xl mx-auto px-6 py-4 h-full flex flex-col">
       <NoteEditor />
     </div>
   );

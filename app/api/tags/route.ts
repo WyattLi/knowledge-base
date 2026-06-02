@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { listTags, createTag } from "@/lib/tags";
+import { listTags, listTagsAdmin, createTag } from "@/lib/tags";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get("page");
+  if (page) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20") || 20));
+    const result = await listTagsAdmin({ page: pageNum, pageSize });
+    return NextResponse.json(result);
+  }
   const tags = await listTags();
   return NextResponse.json(tags);
 }

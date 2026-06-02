@@ -17,6 +17,7 @@ import type { GraphNode } from "./types";
 export default function GraphCanvas() {
   const { data, loading } = useGraphData();
   const { nodePositions, edgeWeights, ready } = useForceLayout(data);
+  const [canvasKey, setCanvasKey] = useState(0);
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
@@ -85,15 +86,29 @@ export default function GraphCanvas() {
   }
 
   return (
-    <div className="absolute inset-0">
+    <div className="h-full w-full relative">
       <Canvas
+        key={canvasKey}
         ref={canvasRef}
         camera={{ position: [0, 3, 18], fov: 60, near: 0.1, far: 120 }}
-        gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2,
+          preserveDrawingBuffer: true,
+        }}
         dpr={[1, 2]}
         style={{ background: "transparent" }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            setCanvasKey(k => k + 1);
+          });
+        }}
       >
-        <ambientLight intensity={0.2} />
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 10, 10]} intensity={1} />
         <Stars radius={40} depth={30} count={600} factor={3} saturation={0.1} fade speed={0} />
 
         <GraphControls
@@ -106,7 +121,7 @@ export default function GraphCanvas() {
           const pos = nodePositions.get(node.id);
           if (!pos) return null;
           const color = node.tags[0]?.color || "#f0edf5";
-          const size = Math.min(0.15 + node.citationCount * 0.08, 0.7);
+          const size = Math.min(0.3 + node.citationCount * 0.15, 1.2);
           return (
             <StarNode
               key={node.id}

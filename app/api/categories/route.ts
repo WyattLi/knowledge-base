@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { listCategories, createCategory } from "@/lib/categories";
+import { listCategories, listCategoriesAdmin, createCategory } from "@/lib/categories";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get("page");
+  if (page) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20") || 20));
+    const result = await listCategoriesAdmin({ page: pageNum, pageSize });
+    return NextResponse.json(result);
+  }
   const cats = await listCategories();
   return NextResponse.json(cats);
 }

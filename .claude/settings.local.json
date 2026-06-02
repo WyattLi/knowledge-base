@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill /F /PID 80564)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/admin/tags)",
+      "Bash(findstr /C:\"标签管理\")"
+    ]
+  }
+}

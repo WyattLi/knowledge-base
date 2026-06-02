@@ -30,6 +30,7 @@ export function CategoryTree() {
   return (
     <div className="space-y-1">
       <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider px-1 mb-2">分类</h3>
+
       {categories.map((cat) => (
         <CategoryNode key={cat.id} category={cat} onSelect={(c) => router.push(`/notes?categoryId=${c.id}`)} depth={0} />
       ))}
@@ -50,7 +51,7 @@ function CategoryNode({ category, onSelect, depth }: { category: Category; onSel
         className="flex items-center gap-1.5 w-full text-left px-1 py-1.5 rounded-md text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
       >
-        {category.children.length > 0 && (
+        {(category.children || []).length > 0 && (
           <span
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
             className="text-text-muted text-xs w-4"
@@ -58,10 +59,10 @@ function CategoryNode({ category, onSelect, depth }: { category: Category; onSel
             {expanded ? "v" : ">"}
           </span>
         )}
-        {category.children.length === 0 && <span className="w-4" />}
+        {(category.children || []).length === 0 && <span className="w-4" />}
         <span>{category.name}</span>
       </button>
-      {expanded && category.children.map((child) => (
+      {expanded && (category.children || []).map((child) => (
         <CategoryNode key={child.id} category={child} onSelect={onSelect} depth={depth + 1} />
       ))}
     </div>

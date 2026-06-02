@@ -1,9 +1,55 @@
 import { db } from "./db";
-import { notes, noteLinks, noteTags, tags } from "./schema";
+import { notes, noteLinks, noteTags, tags, categories } from "./schema";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 import { blobPut, blobGet, blobDelete } from "./blob";
+
+/** Extract internal link targets from markdown: [[target]] and [text](target) — skips http URLs */
+function extractLinks(content: string): { target: string; context: string }[] {
+  const results: { target: string; context: string }[] = [];
+  // [[target]] or [[target|alias]]
+  for (const m of content.matchAll(/\[\[([^\]|]+?)(?:\|[^\]]+?)?\]\]/g)) {
+    const target = m[1].trim();
+    const start = Math.max(0, m.index! - 30);
+    const end = Math.min(content.length, m.index! + m[0].length + 30);
+    results.push({ target, context: content.slice(start, end) });
+  }
+  // [text](target) — skip external URLs
+  for (const m of content.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)) {
+    const target = m[2].trim();
+    if (target.startsWith("http://") || target.startsWith("https://")) continue;
+    const start = Math.max(0, m.index! - 30);
+    const end = Math.min(content.length, m.index! + m[0].length + 30);
+    results.push({ target, context: content.slice(start, end) });
+  }
+  return results;
+}
+
+async function syncNoteLinks(noteId: string, content: string) {
+  // Remove old links
+  await db.delete(noteLinks).where(eq(noteLinks.sourceNoteId, noteId));
+
+  const links = extractLinks(content);
+  if (links.length === 0) return;
+
+  // Look up which target slugs exist as notes
+  const existingNotes = await db
+    .select({ id: notes.id, slug: notes.slug })
+    .from(notes);
+
+  const slugToId = new Map(existingNotes.map(n => [n.slug, n.id]));
+
+  const rows = links.map(l => ({
+    id: uuid(),
+    sourceNoteId: noteId,
+    targetNoteId: slugToId.get(l.target) || null,
+    targetSlug: l.target,
+    context: l.context,
+  }));
+
+  await db.insert(noteLinks).values(rows);
+}
 
 export function makeSlug(title: string): string {
   const s = slugify(title, { lower: true, strict: true });
@@ -58,6 +104,7 @@ export async function listNotes(options?: {
 }
 
 export async function getNoteBySlug(slug: string) {
+  try { slug = decodeURIComponent(slug); } catch {}
   const [note] = await db.select().from(notes).where(eq(notes.slug, slug)).limit(1);
   if (!note) return null;
 
@@ -84,10 +131,15 @@ export async function getNoteBySlug(slug: string) {
   }).from(noteLinks).leftJoin(notes, eq(noteLinks.targetNoteId, notes.id))
     .where(eq(noteLinks.sourceNoteId, note.id));
 
+  const category = note.categoryId
+    ? (await db.select().from(categories).where(eq(categories.id, note.categoryId)).limit(1))[0] || null
+    : null;
+
   return {
     ...note,
     content: content || "",
     tags: noteTagList.map(nt => nt.tag),
+    category,
     backlinks,
     outgoingLinks,
   };
@@ -126,6 +178,8 @@ export async function createNote(data: {
     );
   }
 
+  await syncNoteLinks(id, data.content);
+
   return getNoteBySlug(slug);
 }
 
@@ -154,6 +208,7 @@ export async function updateNote(slug: string, data: {
     const key = updates.slug ? `notes/${updates.slug}.md` : existing.cosKey;
     await blobPut(key, data.content);
     await db.update(notes).set({ wordCount: plainText.length }).where(eq(notes.id, existing.id));
+    await syncNoteLinks(existing.id, data.content);
   }
 
   if (data.tagIds !== undefined) {

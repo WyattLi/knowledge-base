@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { tags, noteTags } from "./schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, sql } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 
@@ -10,7 +10,16 @@ function makeTagSlug(name: string): string {
 }
 
 export async function listTags() {
-  return db.select().from(tags).orderBy(asc(tags.name));
+  return db.select().from(tags).where(eq(tags.enabled, true)).orderBy(asc(tags.name));
+}
+
+export async function listTagsAdmin(options: { page: number; pageSize: number }) {
+  const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(tags);
+  const items = await db.select().from(tags)
+    .orderBy(asc(tags.name))
+    .limit(options.pageSize)
+    .offset((options.page - 1) * options.pageSize);
+  return { items, total: Number(count) };
 }
 
 export async function createTag(data: { name: string; color?: string }) {
@@ -26,7 +35,7 @@ export async function createTag(data: { name: string; color?: string }) {
   return tag;
 }
 
-export async function updateTag(id: string, data: { name?: string; color?: string }) {
+export async function updateTag(id: string, data: { name?: string; color?: string; enabled?: boolean }) {
   const [existing] = await db.select().from(tags).where(eq(tags.id, id)).limit(1);
   if (!existing) return null;
 
@@ -36,6 +45,7 @@ export async function updateTag(id: string, data: { name?: string; color?: strin
     updates.slug = makeTagSlug(data.name);
   }
   if (data.color !== undefined) updates.color = data.color;
+  if (data.enabled !== undefined) updates.enabled = data.enabled;
 
   await db.update(tags).set(updates).where(eq(tags.id, id));
   const [updated] = await db.select().from(tags).where(eq(tags.id, id)).limit(1);

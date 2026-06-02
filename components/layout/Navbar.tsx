@@ -22,11 +22,22 @@ export function Navbar({ children }: { children?: React.ReactNode }) {
             笔记
           </Link>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {isAuthenticated && (
-            <Link href="/notes/new" className="text-sm text-nebula-purple hover:text-nebula-cyan transition-colors mr-2">
-              新建
-            </Link>
+            <>
+              <Link
+                href="/notes/new"
+                className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              >
+                新建
+              </Link>
+              <Link
+                href="/admin/categories"
+                className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              >
+                管理
+              </Link>
+            </>
           )}
           {loading ? (
             <div className="w-4 h-4 rounded-full border border-white/20 border-t-white/60 animate-spin" />

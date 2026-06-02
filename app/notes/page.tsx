@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { isAuthenticatedServer } from "@/lib/auth";
 import { listNotes } from "@/lib/notes";
+
+export const dynamic = "force-dynamic";
 
 export default async function NotesPage({ searchParams }: { searchParams: Promise<{ categoryId?: string }> }) {
   const sp = await searchParams;
-  const notes = await listNotes({ categoryId: sp.categoryId, limit: 100 });
+  const [notes, authed] = await Promise.all([listNotes({ categoryId: sp.categoryId, limit: 100 }), isAuthenticatedServer()]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -14,12 +17,14 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
             共 {notes.length} 篇{sp.categoryId ? "（已筛选）" : ""}
           </p>
         </div>
-        <Link
-          href="/notes/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:bg-nebula-purple transition-colors"
-        >
-          + 新建笔记
-        </Link>
+        {authed && (
+          <Link
+            href="/notes/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:bg-nebula-purple transition-colors"
+          >
+            + 新建笔记
+          </Link>
+        )}
       </div>
 
       {notes.length === 0 ? (

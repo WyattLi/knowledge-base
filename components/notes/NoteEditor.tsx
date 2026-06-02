@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { flatCategories as flattenTree } from "@/lib/category-tree";
 
 interface Tag { id: string; name: string; slug: string; color: string; }
 interface Category { id: string; name: string; slug: string; children: Category[]; }
@@ -68,9 +69,7 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
     }
   };
 
-  const flatCategories = (cats: Category[], depth = 0): { cat: Category; depth: number }[] => {
-    return cats.flatMap(c => [{ cat: c, depth }, ...flatCategories(c.children, depth + 1)]);
-  };
+  const treeOptions = flattenTree(allCategories).map(c => ({ cat: c, depth: c.depth }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -96,7 +95,7 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             className="w-full glass-input rounded-lg px-3 py-2 text-sm text-text-primary"
           >
             <option value="">无分类</option>
-            {flatCategories(allCategories).map(({ cat, depth }) => (
+            {treeOptions.map(({ cat, depth }) => (
               <option key={cat.id} value={cat.id}>
                 {"  ".repeat(depth)}{cat.name}
               </option>

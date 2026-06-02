@@ -1,8 +1,13 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isAuthenticatedServer } from "@/lib/auth";
 import { getNoteBySlug } from "@/lib/notes";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditNotePage({ params }: { params: Promise<{ slug: string }> }) {
+  if (!await isAuthenticatedServer()) redirect("/notes");
+
   const { slug } = await params;
   const note = await getNoteBySlug(slug);
   if (!note) notFound();

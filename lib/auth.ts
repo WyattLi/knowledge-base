@@ -51,8 +51,20 @@ export function parseCookies(cookieHeader: string): Record<string, string> {
 export async function isAuthenticated(request: Request): Promise<boolean> {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return false;
+  return checkToken(cookieHeader);
+}
+
+export async function isAuthenticatedServer(): Promise<boolean> {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return false;
+  return verifyToken(token);
+}
+
+function checkToken(cookieHeader: string): Promise<boolean> {
   const cookies = parseCookies(cookieHeader);
   const token = cookies[COOKIE_NAME];
-  if (!token) return false;
+  if (!token) return Promise.resolve(false);
   return verifyToken(token);
 }

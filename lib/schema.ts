@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, text, datetime, json, int, primaryKey, index, mysqlEnum } from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, text, datetime, json, int, boolean, primaryKey, index, mysqlEnum } from "drizzle-orm/mysql-core";
 import { relations, sql } from "drizzle-orm";
 
 // ─── Categories (hierarchical, self-referencing) ───
@@ -9,6 +9,7 @@ export const categories = mysqlTable("categories", {
   description: text("description"),
   parentId: varchar("parent_id", { length: 36 }),
   sortOrder: int("sort_order").default(0),
+  enabled: boolean("enabled").default(true).notNull(),
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -25,6 +26,7 @@ export const tags = mysqlTable("tags", {
   name: varchar("name", { length: 60 }).notNull().unique(),
   slug: varchar("slug", { length: 60 }).notNull().unique(),
   color: varchar("color", { length: 7 }).default("#6366f1"),
+  enabled: boolean("enabled").default(true).notNull(),
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

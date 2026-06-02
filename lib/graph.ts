@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { notes, noteLinks, noteTags, tags } from "./schema";
-import { eq, and, isNotNull, sql } from "drizzle-orm";
+import { eq, and, or, isNotNull, sql, inArray } from "drizzle-orm";
 
 export interface GraphNode {
   id: string;
@@ -20,14 +20,25 @@ export interface GraphEdge {
   targetSlug: string;
 }
 
-export async function getGraphData(): Promise<{ nodes: GraphNode[]; edges: GraphEdge[] }> {
+export async function getGraphData(filter?: {
+  categoryId?: string;
+  tagId?: string;
+}): Promise<{ nodes: GraphNode[]; edges: GraphEdge[] }> {
+  const conditions = [eq(notes.status, "published")];
+  if (filter?.categoryId) {
+    conditions.push(eq(notes.categoryId, filter.categoryId));
+  }
+  if (filter?.tagId) {
+    conditions.push(inArray(notes.id, db.select({ noteId: noteTags.noteId }).from(noteTags).where(eq(noteTags.tagId, filter.tagId))));
+  }
+
   const allNotes = await db.select({
     id: notes.id,
     title: notes.title,
     slug: notes.slug,
     categoryId: notes.categoryId,
     wordCount: notes.wordCount,
-  }).from(notes).where(eq(notes.status, "published"));
+  }).from(notes).where(and(...conditions));
 
   const allLinks = await db.select({
     id: noteLinks.id,

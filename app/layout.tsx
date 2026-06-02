@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import CosmicBackground from "@/components/background/CosmicBackground";
+import CosmicBackgroundWrapper from "@/components/background/CosmicBackgroundWrapper";
 import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN" className="h-full antialiased">
       <body className="h-full flex flex-col relative overflow-hidden">
-        <CosmicBackground />
+        <CosmicBackgroundWrapper />
         <AppShell>{children}</AppShell>
       </body>
     </html>

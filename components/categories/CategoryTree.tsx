@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface Category {
   id: string;
@@ -14,6 +14,7 @@ interface Category {
 
 export function CategoryTree() {
   const router = useRouter();
+  const pathname = usePathname();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +40,7 @@ export function CategoryTree() {
       </h3>
 
       {categories.map((cat) => (
-        <CategoryNode key={cat.id} category={cat} onSelect={(c) => router.push(`/notes?categoryId=${c.id}`)} depth={0} />
+        <CategoryNode key={cat.id} category={cat} onSelect={(c) => router.push(pathname.startsWith("/notes") ? `/notes?categoryId=${c.id}` : `/explore?categoryId=${c.id}`)} depth={0} />
       ))}
       {categories.length === 0 && (
         <p className="text-text-muted/70 text-xs px-2 py-4 text-center">暂无分类</p>

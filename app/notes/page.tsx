@@ -4,9 +4,9 @@ import { listNotes } from "@/lib/notes";
 
 export const dynamic = "force-dynamic";
 
-export default async function NotesPage({ searchParams }: { searchParams: Promise<{ categoryId?: string }> }) {
+export default async function NotesPage({ searchParams }: { searchParams: Promise<{ categoryId?: string; tagId?: string }> }) {
   const sp = await searchParams;
-  const [notes, authed] = await Promise.all([listNotes({ categoryId: sp.categoryId, limit: 100 }), isAuthenticatedServer()]);
+  const [notes, authed] = await Promise.all([listNotes({ categoryId: sp.categoryId, tagId: sp.tagId, limit: 100 }), isAuthenticatedServer()]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -14,7 +14,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
         <div>
           <h1 className="text-2xl font-bold text-text-primary">笔记</h1>
           <p className="text-text-muted text-sm mt-1">
-            共 {notes.length} 篇{sp.categoryId ? "（已筛选）" : ""}
+            共 {notes.length} 篇{sp.categoryId || sp.tagId ? "（已筛选）" : ""}
           </p>
         </div>
         {authed && (

@@ -114,6 +114,15 @@ export const sourcesRelations = relations(sources, ({ many }) => ({
   notes: many(notes),
 }));
 
+// ─── Note Content (plain text for AI / full-text search) ───
+export const noteContent = mysqlTable("note_content", {
+  noteId: varchar("note_id", { length: 36 }).primaryKey(),
+  plainText: text("plain_text").notNull(),
+  summary: text("summary"),
+  summaryAt: datetime("summary_at"),
+  rawMarkdown: text("raw_markdown").notNull(),
+});
+
 // ─── Operation Logs ───
 export const operationLogs = mysqlTable("operation_logs", {
   id: varchar("id", { length: 36 }).primaryKey(),

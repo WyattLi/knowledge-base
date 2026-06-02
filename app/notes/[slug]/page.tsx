@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { isAuthenticatedServer } from "@/lib/auth";
 import { getNoteBySlug } from "@/lib/notes";
 import { MarkdownRenderer } from "@/components/notes/MarkdownRenderer";
+import { DeleteNoteButton } from "@/components/notes/DeleteNoteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,9 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
   const category = note.category as any;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-3xl mx-auto px-8 py-10">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-10">
         <Link href="/notes" className="text-sm text-text-muted hover:text-text-primary transition-colors">
           &larr; 返回列表
         </Link>
@@ -33,77 +34,83 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
             </Link>
           )}
           {authed && (
-            <Link
-              href={`/notes/${note.slug}/edit`}
-              className="text-sm px-3 py-1.5 rounded-lg glass text-text-secondary glass-hover transition-colors"
-            >
-              编辑
-            </Link>
+            <>
+              <Link
+                href={`/notes/${note.slug}/edit`}
+                className="text-sm px-3 py-1.5 rounded-lg glass text-text-secondary glass-hover transition-colors"
+              >
+                编辑
+              </Link>
+              <DeleteNoteButton slug={note.slug} />
+            </>
           )}
         </div>
       </div>
 
       <article>
         {/* Title */}
-        <h1 className="text-3xl font-bold text-text-primary mb-2">{note.title}</h1>
+        <header className="mb-10">
+          <h1 className="text-4xl font-bold text-text-primary leading-tight mb-4">{note.title}</h1>
 
-        {/* Meta */}
-        <div className="flex items-center gap-4 text-sm text-text-muted mb-6">
-          <span>{note.wordCount} 字</span>
-          <span>更新于 {new Date(note.updatedAt!).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
-          {note.status !== "published" && (
-            <span className={`px-2 py-0.5 rounded-full text-xs ${
-              note.status === "draft" ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-text-muted"
-            }`}>
-              {note.status === "draft" ? "草稿" : "已归档"}
-            </span>
-          )}
-        </div>
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-8">
-            {tags.map((tag: any) => (
-              <Link
-                key={tag.id}
-                href={`/notes?tagId=${tag.id}`}
-                className="px-2.5 py-1 rounded-full text-xs font-medium transition-opacity hover:opacity-80"
-                style={{ backgroundColor: tag.color + "22", color: tag.color, border: `1px solid ${tag.color}44` }}
-              >
-                {tag.name}
-              </Link>
-            ))}
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+            <span>{note.wordCount?.toLocaleString()} 字</span>
+            <span className="text-white/20">·</span>
+            <span>{new Date(note.updatedAt!).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
+            {note.status !== "published" && (
+              <>
+                <span className="text-white/20">·</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  note.status === "draft" ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-text-muted"
+                }`}>
+                  {note.status === "draft" ? "草稿" : "已归档"}
+                </span>
+              </>
+            )}
           </div>
-        )}
+
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {tags.map((tag: any) => (
+                <Link
+                  key={tag.id}
+                  href={`/notes?tagId=${tag.id}`}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:scale-105"
+                  style={{ backgroundColor: tag.color + "18", color: tag.color, border: `1px solid ${tag.color}33`, boxShadow: `0 0 6px ${tag.color}10` }}
+                >
+                  {tag.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </header>
+
+        {/* Divider */}
+        <div className="border-t border-white/10 mb-10" />
 
         {/* Content */}
-        <div className="glass rounded-xl p-8 mb-12">
-          <MarkdownRenderer content={note.content as string} />
-        </div>
+        <MarkdownRenderer content={note.content as string} />
+
+        {/* Divider */}
+        <div className="border-t border-white/10 mt-12 mb-10" />
 
         {/* Outgoing links */}
         {outgoingLinks.length > 0 && (
-          <div className="mb-10">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">链接到</h2>
-            <div className="space-y-2">
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-text-primary mb-4">链接到</h2>
+            <div className="space-y-1.5">
               {outgoingLinks.map((link: any, i: number) => (
                 <Link
                   key={i}
                   href={`/notes/${link.targetSlug}`}
-                  className="flex items-center gap-2 glass rounded-lg p-3 glass-hover transition-colors"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-white/3 transition-colors"
                 >
-                  {link.targetExists ? (
-                    <>
-                      <span className="text-nebula-cyan text-xs">&#x2197;</span>
-                      <span className="text-sm font-medium text-text-primary">{link.targetTitle}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-text-muted text-xs">&#x2197;</span>
-                      <span className="text-sm text-text-muted">{link.targetSlug}</span>
-                      <span className="text-xs text-text-muted/50">（尚未创建）</span>
-                    </>
-                  )}
+                  <span className={link.targetExists ? "text-nebula-cyan" : "text-text-muted/40"}>
+                    &#x2197;
+                  </span>
+                  <span className="text-sm text-text-primary">{link.targetExists ? link.targetTitle : link.targetSlug}</span>
+                  {!link.targetExists && <span className="text-xs text-text-muted/40">（尚未创建）</span>}
                 </Link>
               ))}
             </div>
@@ -112,18 +119,18 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
 
         {/* Backlinks */}
         {backlinks.length > 0 && (
-          <div className="mb-10">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">引用此笔记</h2>
-            <div className="space-y-2">
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-text-primary mb-4">引用此笔记</h2>
+            <div className="space-y-1.5">
               {backlinks.map((bl: any) => (
                 <Link
                   key={bl.id}
                   href={`/notes/${bl.sourceSlug}`}
-                  className="block glass rounded-lg p-3 glass-hover transition-colors"
+                  className="block rounded-lg px-3 py-2.5 hover:bg-white/3 transition-colors"
                 >
                   <span className="text-sm font-medium text-text-primary">{bl.sourceTitle}</span>
                   {bl.context && (
-                    <p className="text-xs text-text-muted mt-1.5 line-clamp-2">{bl.context}</p>
+                    <p className="text-xs text-text-muted/60 mt-1 line-clamp-2">{bl.context}</p>
                   )}
                 </Link>
               ))}
@@ -131,9 +138,8 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
           </div>
         )}
 
-        {/* No links at all */}
         {backlinks.length === 0 && outgoingLinks.length === 0 && (
-          <div className="text-center py-10 text-text-muted text-sm">
+          <div className="text-center py-8 text-text-muted/40 text-sm border-t border-white/5 pt-10 mt-8">
             暂无链接关系
           </div>
         )}

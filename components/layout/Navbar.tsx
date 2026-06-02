@@ -15,7 +15,7 @@ export function Navbar({ children }: { children?: React.ReactNode }) {
       <nav className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-white/5">
         <div className="flex items-center gap-3">
           {children}
-          <Link href="/" className="text-sm font-medium text-text-secondary tracking-wide hover:text-text-primary transition-colors">
+          <Link href="/explore" className="text-sm font-medium text-text-secondary tracking-wide hover:text-text-primary transition-colors">
             Knowledge Base
           </Link>
           <Link href="/notes" className="text-sm text-text-muted hover:text-text-primary transition-colors ml-3">

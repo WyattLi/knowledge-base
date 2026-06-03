@@ -28,6 +28,7 @@ export async function PUT(
       categoryId: body.categoryId,
       status: body.status,
       tagIds: body.tagIds,
+      summary: body.summary,
     });
     if (!note) return NextResponse.json({ error: "笔记不存在" }, { status: 404 });
     return NextResponse.json(note);

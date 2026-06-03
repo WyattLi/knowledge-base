@@ -17,6 +17,7 @@ interface NoteData {
   categoryId: string;
   status: string;
   tagIds: string[];
+  summary?: string;
 }
 
 export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<NoteData>; noteSlug?: string }) {
@@ -31,6 +32,8 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
   const [aiOpen, setAiOpen] = useState(false);
   const [splitMode, setSplitMode] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [summary, setSummary] = useState(initialData?.summary || "");
+  const [generatingSummary, setGeneratingSummary] = useState(false);
 
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
@@ -101,6 +104,31 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
     );
   };
 
+  const handleGenerateSummary = async () => {
+    if (!title.trim() || !content.trim()) {
+      setError("请先填写标题和内容");
+      return;
+    }
+    setGeneratingSummary(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), content: content.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSummary(data.summary);
+      } else {
+        setError(data.error || "摘要生成失败");
+      }
+    } catch {
+      setError("网络错误");
+    }
+    setGeneratingSummary(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
@@ -116,7 +144,7 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: title.trim(), content: content.trim(), categoryId: categoryId || null, status, tagIds: selectedTags }),
+      body: JSON.stringify({ title: title.trim(), content: content.trim(), categoryId: categoryId || null, status, tagIds: selectedTags, summary: summary.trim() || null }),
     });
 
     if (res.ok) {
@@ -225,6 +253,25 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Summary */}
+      <div className="shrink-0 mb-2 flex items-start gap-2">
+        <textarea
+          value={summary}
+          onChange={e => setSummary(e.target.value)}
+          placeholder="AI 摘要（可选）"
+          rows={2}
+          className="flex-1 glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
+        />
+        <button
+          type="button"
+          onClick={handleGenerateSummary}
+          disabled={generatingSummary}
+          className="shrink-0 rounded-lg px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-40"
+        >
+          {generatingSummary ? "生成中..." : "AI 摘要"}
+        </button>
       </div>
 
       {/* Toolbar */}

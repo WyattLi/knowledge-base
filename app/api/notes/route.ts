@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       categoryId: body.categoryId,
       status: body.status,
       tagIds: body.tagIds,
+      summary: body.summary,
     });
     return NextResponse.json(note, { status: 201 });
   } catch (e: any) {

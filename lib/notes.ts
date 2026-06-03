@@ -162,6 +162,7 @@ export async function createNote(data: {
   status?: string;
   tagIds?: string[];
   sourceId?: string;
+  summary?: string;
 }) {
   const id = uuid();
   const slug = makeSlug(data.title);
@@ -190,13 +191,16 @@ export async function createNote(data: {
     );
   }
 
-  await db.insert(noteContent).values({ noteId: id, plainText, rawMarkdown: data.content });
+  const summary = data.summary || null;
+  await db.insert(noteContent).values({ noteId: id, plainText, rawMarkdown: data.content, summary, summaryAt: summary ? new Date() : null });
   await syncNoteLinks(id, data.content);
 
-  // Fire-and-forget: generate summary without blocking the response
-  generateSummary(data.title, data.content).then(async sum => {
-    await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, id));
-  }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+  // Fire-and-forget auto summary only if user didn't provide one
+  if (!summary) {
+    generateSummary(data.title, data.content).then(async sum => {
+      await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, id));
+    }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+  }
 
   return getNoteBySlug(slug);
 }
@@ -207,6 +211,7 @@ export async function updateNote(slug: string, data: {
   categoryId?: string;
   status?: string;
   tagIds?: string[];
+  summary?: string;
 }) {
   const existing = await getNoteBySlug(slug);
   if (!existing) return null;
@@ -241,17 +246,30 @@ export async function updateNote(slug: string, data: {
     }
     await blobPut(key, data.content);
     await db.update(notes).set({ wordCount: plainText.length }).where(eq(notes.id, existing.id));
-    await db.insert(noteContent).values({ noteId: existing.id, plainText, rawMarkdown: data.content })
-      .onDuplicateKeyUpdate({ set: { plainText, rawMarkdown: data.content } });
+    const summaryUpdate: any = {};
+    if (data.summary !== undefined) summaryUpdate.summary = data.summary || null;
+    if (data.summary !== undefined) summaryUpdate.summaryAt = data.summary ? new Date() : null;
+
+    await db.insert(noteContent).values({ noteId: existing.id, plainText, rawMarkdown: data.content, ...summaryUpdate })
+      .onDuplicateKeyUpdate({ set: { plainText, rawMarkdown: data.content, ...summaryUpdate } });
     await syncNoteLinks(existing.id, data.content);
 
-    const titleForSummary = updates.title ?? existing.title;
-    generateSummary(titleForSummary, data.content).then(async sum => {
-      await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, existing.id));
-    }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+    if (!data.summary) {
+      const titleForSummary = updates.title ?? existing.title;
+      generateSummary(titleForSummary, data.content).then(async sum => {
+        await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, existing.id));
+      }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+    }
   } else if (newKey && existing.cosKey !== newKey) {
     // Slug/category changed but content didn't — move the blob
     await blobMove(existing.cosKey, newKey);
+  }
+
+  // Summary-only update (no content change)
+  if (data.summary !== undefined && data.content === undefined) {
+    await db.update(noteContent)
+      .set({ summary: data.summary || null, summaryAt: data.summary ? new Date() : null })
+      .where(eq(noteContent.noteId, existing.id));
   }
 
   if (data.tagIds !== undefined) {

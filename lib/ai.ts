@@ -127,19 +127,16 @@ function parseJsonArray(raw: string): any[] {
 }
 
 /**
- * Generate a 1-2 sentence Chinese summary of a note (max 100 chars).
+ * Generate a 3-5 sentence Chinese summary of a note (200-300 chars),
+ * with key concepts bolded. Uses the summarize skill template.
  */
 export async function generateSummary(title: string, content: string): Promise<string> {
-  const text = content.slice(0, 6000);
-  const prompt = `请用 1-2 句中文总结以下笔记的核心内容，不超过 100 字。直接返回摘要文本。
+  const skill = loadSkill("summarize");
+  const text = content.slice(0, 8000);
+  const prompt = renderSkill(skill.body, { title, content: text });
 
-标题：${title}
-
-内容：
-${text}`;
-
-  const result = await chat(prompt, 200);
-  return result.trim().slice(0, 200);
+  const result = await chat(prompt, skill.metadata.maxTokens || 500);
+  return result.trim().slice(0, 500);
 }
 
 interface SuggestResult {

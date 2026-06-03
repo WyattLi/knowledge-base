@@ -22,6 +22,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ slug:
           categoryId: note.categoryId || "",
           status: note.status || "published",
           tagIds: (note.tags as any[])?.map((t: any) => t.id) || [],
+          summary: (note as any).summary || "",
         }}
       />
     </div>

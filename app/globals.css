@@ -18,6 +18,11 @@
   border-bottom-color: rgba(0, 0, 0, 0.10);
 }
 
+[data-theme="light"] .markdown-body table tr {
+  background-color: transparent;
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
 [data-theme="light"] .markdown-body table th,
 [data-theme="light"] .markdown-body table td {
   border-color: rgba(0, 0, 0, 0.10);

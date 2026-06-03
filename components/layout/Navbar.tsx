@@ -46,6 +46,12 @@ export function Navbar({ children }: { children?: React.ReactNode }) {
               >
                 管理
               </Link>
+              <Link
+                href="/sources/new"
+                className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors"
+              >
+                摄入
+              </Link>
             </>
           )}
           {loading ? (

@@ -154,6 +154,7 @@ export async function createNote(data: {
   categoryId?: string;
   status?: string;
   tagIds?: string[];
+  sourceId?: string;
 }) {
   const id = uuid();
   const slug = makeSlug(data.title);
@@ -169,6 +170,7 @@ export async function createNote(data: {
     slug,
     cosKey,
     categoryId: data.categoryId || null,
+    sourceId: data.sourceId || null,
     status: (data.status as any) || "published",
     wordCount: plainText.length,
     createdAt: now,

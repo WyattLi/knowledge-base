@@ -1,5 +1,46 @@
 @import "tailwindcss";
 @import "highlight.js/styles/github-dark.css";
+@import "github-markdown-css/github-markdown-light.css";
+
+/* Dark mode overrides for github-markdown-css */
+[data-theme="dark"] .markdown-body {
+  color: #e0dfe6;
+  background-color: transparent;
+}
+
+[data-theme="dark"] .markdown-body h1,
+[data-theme="dark"] .markdown-body h2,
+[data-theme="dark"] .markdown-body h3,
+[data-theme="dark"] .markdown-body h4,
+[data-theme="dark"] .markdown-body h5,
+[data-theme="dark"] .markdown-body h6 {
+  color: #e0dfe6;
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .markdown-body table th,
+[data-theme="dark"] .markdown-body table td {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .markdown-body table tr:nth-child(2n) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .markdown-body blockquote {
+  color: #9493a0;
+  border-left-color: rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .markdown-body code {
+  color: #e0dfe6;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .markdown-body hr {
+  background-color: rgba(255, 255, 255, 0.10);
+}
 
 /* ══════════════════════════════════════════════
    Semantic Design Tokens

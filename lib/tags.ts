@@ -22,7 +22,7 @@ export async function listTagsAdmin(options: { page: number; pageSize: number })
   return { items, total: Number(count) };
 }
 
-export async function createTag(data: { name: string; color?: string }) {
+export async function createTag(data: { name: string; color?: string; enabled?: boolean }) {
   const id = uuid();
   const slug = makeTagSlug(data.name);
   await db.insert(tags).values({
@@ -30,6 +30,7 @@ export async function createTag(data: { name: string; color?: string }) {
     name: data.name,
     slug,
     color: data.color || "#6366f1",
+    enabled: data.enabled ?? true,
   });
   const [tag] = await db.select().from(tags).where(eq(tags.id, id)).limit(1);
   return tag;

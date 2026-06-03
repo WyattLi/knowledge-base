@@ -42,11 +42,11 @@ export default function TagsAdminPage() {
     const res = await fetch("/api/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: form.name.trim(), color: form.color }),
+      body: JSON.stringify({ name: form.name.trim(), color: form.color, enabled: form.enabled }),
     });
     if (res.ok) {
       setShowCreate(false);
-      setForm({ name: "", color: "#6366f1" });
+      setForm({ name: "", color: "#6366f1", enabled: true });
       fetchData();
     }
   };

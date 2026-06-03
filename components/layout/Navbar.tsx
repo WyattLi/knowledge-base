@@ -18,7 +18,7 @@ export function Navbar({ children }: { children?: React.ReactNode }) {
         <div className="flex items-center gap-3">
           {children}
           <Link href="/explore" className="text-sm font-medium text-text-secondary tracking-wide hover:text-text-primary transition-colors">
-            Knowledge Base
+            首页
           </Link>
           <Link href="/notes" className="text-sm text-text-muted hover:text-text-primary transition-colors ml-3">
             笔记

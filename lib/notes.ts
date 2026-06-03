@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { notes, noteLinks, noteTags, tags, categories, noteContent } from "./schema";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, ne, desc, and, sql, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 import { blobPut, blobGet, blobDelete, blobMove } from "./blob";
@@ -313,9 +313,9 @@ export async function prefilterCandidates(
     let score = 0;
 
     // Summary overlap (primary)
-    if (n.summary && currentWords.length > 0) {
+    if (n.summary && currentWords.size > 0) {
       const candidateWords = extractKeywords(n.summary);
-      const intersection = currentWords.filter(w => candidateWords.has(w)).length;
+      const intersection = [...currentWords].filter(w => candidateWords.has(w)).length;
       score += intersection * 3;
     }
 

@@ -181,7 +181,7 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
               type="button"
               onClick={() => setSplitMode(!splitMode)}
               className={`text-xs px-2 py-1 rounded transition-colors ${
-                splitMode ? "bg-nebula-purple/20 text-nebula-purple" : "text-text-muted hover:text-text-primary"
+                splitMode ? "text-text-primary" : "text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)]"
               }`}
             >
               {splitMode ? "分栏" : "纯编辑"}
@@ -198,7 +198,7 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             >
               AI 联想
             </Button>
-            <Button type="submit" disabled={saving} size="sm">
+            <Button type="submit" disabled={saving} variant="ghost" size="sm">
               {saving ? "保存中..." : noteSlug ? "更新" : "创建"}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>取消</Button>

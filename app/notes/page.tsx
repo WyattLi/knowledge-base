@@ -4,23 +4,31 @@ import { listNotes } from "@/lib/notes";
 
 export const dynamic = "force-dynamic";
 
-export default async function NotesPage({ searchParams }: { searchParams: Promise<{ categoryId?: string; tagId?: string }> }) {
+export default async function NotesPage({ searchParams }: { searchParams: Promise<{ categoryId?: string; tagId?: string | string[] }> }) {
   const sp = await searchParams;
-  const [notes, authed] = await Promise.all([listNotes({ categoryId: sp.categoryId, tagId: sp.tagId, limit: 100 }), isAuthenticatedServer()]);
+
+  // Normalize tagId: Next.js gives string for single param, string[] for multiple
+  const rawTagIds = sp.tagId ? (Array.isArray(sp.tagId) ? sp.tagId : [sp.tagId]) : [];
+
+  const [notes, authed] = await Promise.all([
+    listNotes({ categoryId: sp.categoryId, tagIds: rawTagIds.length > 0 ? rawTagIds : undefined, limit: 100 }),
+    isAuthenticatedServer(),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">笔记</h1>
           <p className="text-text-muted text-sm mt-1">
-            共 {notes.length} 篇{sp.categoryId || sp.tagId ? "（已筛选）" : ""}
+            共 {notes.length} 篇{sp.categoryId || rawTagIds.length > 0 ? "（已筛选）" : ""}
           </p>
         </div>
         {authed && (
           <Link
             href="/notes/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_var(--border-glow)] hover:bg-nebula-purple transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors"
           >
             + 新建笔记
           </Link>

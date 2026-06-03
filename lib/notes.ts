@@ -78,14 +78,18 @@ export async function listNotes(options?: {
   status?: string;
   categoryId?: string;
   tagId?: string;
+  tagIds?: string[];
   limit?: number;
   offset?: number;
 }) {
   const conditions = [];
   if (options?.status) conditions.push(eq(notes.status, options.status as any));
   if (options?.categoryId) conditions.push(eq(notes.categoryId, options.categoryId));
-  if (options?.tagId) {
-    const taggedNoteIds = db.select({ noteId: noteTags.noteId }).from(noteTags).where(eq(noteTags.tagId, options.tagId));
+  // Support both single tagId (backward compat) and multiple tagIds
+  const effectiveTagIds = options?.tagIds?.length ? options.tagIds : (options?.tagId ? [options.tagId] : []);
+  if (effectiveTagIds.length > 0) {
+    // OR logic: notes matching ANY of the selected tags
+    const taggedNoteIds = db.select({ noteId: noteTags.noteId }).from(noteTags).where(inArray(noteTags.tagId, effectiveTagIds));
     conditions.push(inArray(notes.id, taggedNoteIds));
   }
 
@@ -138,9 +142,12 @@ export async function getNoteBySlug(slug: string) {
     ? (await db.select().from(categories).where(eq(categories.id, note.categoryId)).limit(1))[0] || null
     : null;
 
+  const [nc] = await db.select({ summary: noteContent.summary }).from(noteContent).where(eq(noteContent.noteId, note.id)).limit(1);
+
   return {
     ...note,
     content: content || "",
+    summary: nc?.summary || null,
     tags: noteTagList.map(nt => nt.tag),
     category,
     backlinks,

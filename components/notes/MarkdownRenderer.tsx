@@ -25,7 +25,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
         "--color-fg-muted": isDark ? "#9493a0" : "#5e5e5e",
         "--color-border-default": isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)",
         "--color-border-muted": isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)",
-        "--color-accent-fg": "#8b5cf6",
+        "--color-accent-fg": isDark ? "#8b5cf6" : "#7c3aed",
         "--color-accent-emphasis": isDark ? "#22d3ee" : "#0891b2",
         "--color-neutral-muted": isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
         "--color-danger-fg": isDark ? "#f87171" : "#dc2626",

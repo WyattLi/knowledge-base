@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface Category {
   id: string;
@@ -15,6 +15,7 @@ interface Category {
 export function CategoryTree() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +26,24 @@ export function CategoryTree() {
   }, []);
 
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
+
+  const activeCategoryId = searchParams.get("categoryId");
+
+  const buildUrl = (categoryId: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (categoryId) {
+      params.set("categoryId", categoryId);
+    } else {
+      params.delete("categoryId");
+    }
+    return `${pathname}?${params.toString()}`;
+  };
+
+  const handleSelect = (cat: Category) => {
+    // Clicking the active category deselects it
+    const nextId = cat.id === activeCategoryId ? null : cat.id;
+    router.push(buildUrl(nextId));
+  };
 
   if (loading) return (
     <div className="flex items-center gap-2 px-3 py-2">
@@ -40,7 +59,13 @@ export function CategoryTree() {
       </h3>
 
       {categories.map((cat) => (
-        <CategoryNode key={cat.id} category={cat} onSelect={(c) => router.push(pathname.startsWith("/notes") ? `/notes?categoryId=${c.id}` : `/explore?categoryId=${c.id}`)} depth={0} />
+        <CategoryNode
+          key={cat.id}
+          category={cat}
+          activeCategoryId={activeCategoryId}
+          onSelect={handleSelect}
+          depth={0}
+        />
       ))}
       {categories.length === 0 && (
         <p className="text-text-muted/70 text-xs px-2 py-4 text-center">暂无分类</p>
@@ -49,9 +74,20 @@ export function CategoryTree() {
   );
 }
 
-function CategoryNode({ category, onSelect, depth }: { category: Category; onSelect?: (cat: Category) => void; depth: number }) {
+function CategoryNode({
+  category,
+  activeCategoryId,
+  onSelect,
+  depth,
+}: {
+  category: Category;
+  activeCategoryId: string | null;
+  onSelect: (cat: Category) => void;
+  depth: number;
+}) {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = (category.children || []).length > 0;
+  const isActive = category.id === activeCategoryId;
 
   return (
     <div className="relative">
@@ -68,9 +104,13 @@ function CategoryNode({ category, onSelect, depth }: { category: Category; onSel
       )}
 
       <button
-        onClick={() => onSelect?.(category)}
+        onClick={() => onSelect(category)}
         className="group flex items-center gap-1.5 w-full text-left py-1.5 rounded-md transition-all duration-200"
-        style={{ paddingLeft: `${depth * 14 + 6}px` }}
+        style={{
+          paddingLeft: `${depth * 14 + 6}px`,
+          background: isActive ? "var(--surface-active)" : "transparent",
+          borderLeft: isActive ? "2px solid var(--accent-purple)" : "2px solid transparent",
+        }}
       >
         {/* Expand toggle */}
         {hasChildren ? (
@@ -78,24 +118,35 @@ function CategoryNode({ category, onSelect, depth }: { category: Category; onSel
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
             className="shrink-0 w-3.5 h-3.5 flex items-center justify-center rounded-full transition-all duration-300"
             style={{
-              background: expanded ? "rgba(139,92,246,0.15)" : "transparent",
-              boxShadow: expanded ? "0 0 6px rgba(139,92,246,0.2)" : "none",
+              background: expanded ? "var(--surface-active)" : "transparent",
+              boxShadow: expanded ? "0 0 6px var(--border-glow)" : "none",
             }}
           >
-            <span className={`text-[8px] transition-transform duration-300 ${expanded ? "text-nebula-purple/70 rotate-0" : "text-text-muted/70 -rotate-90"}`}>
+            <span className={`text-[8px] transition-transform duration-300 ${expanded ? "rotate-0" : "-rotate-90"}`}
+              style={{ color: expanded ? "var(--accent-purple)" : "var(--text-muted)" }}
+            >
               &#x25BC;
             </span>
           </span>
         ) : (
           <span className="shrink-0 w-3.5 flex justify-center">
-            <span className="w-1 h-1 rounded-full bg-nebula-purple/20 group-hover:bg-nebula-purple/50 group-hover:shadow-[0_0_4px_rgba(139,92,246,0.5)] transition-all duration-300" />
+            <span
+              className="w-1 h-1 rounded-full transition-all duration-300"
+              style={{
+                background: isActive ? "var(--accent-purple)" : "var(--text-muted)",
+                opacity: isActive ? 1 : 0.2,
+                boxShadow: isActive ? "0 0 6px var(--accent-purple)" : "none",
+              }}
+            />
           </span>
         )}
 
         <span className={`text-sm truncate transition-all duration-200 ${
-          hasChildren
-            ? "text-text-primary/90 font-medium"
-            : "text-text-secondary/80 group-hover:text-text-primary"
+          isActive
+            ? "text-text-primary font-semibold"
+            : hasChildren
+              ? "text-text-primary/90 font-medium"
+              : "text-text-secondary/80 group-hover:text-text-primary"
         }`}>
           {category.name}
         </span>
@@ -105,10 +156,21 @@ function CategoryNode({ category, onSelect, depth }: { category: Category; onSel
             {(category.children || []).length}
           </span>
         )}
+
+        {/* Deselect hint when active */}
+        {isActive && (
+          <span className="shrink-0 w-1 h-1 rounded-full ml-0.5" style={{ background: "var(--accent-purple)", opacity: 0.6 }} />
+        )}
       </button>
 
       {expanded && hasChildren && category.children!.map((child) => (
-        <CategoryNode key={child.id} category={child} onSelect={onSelect} depth={depth + 1} />
+        <CategoryNode
+          key={child.id}
+          category={child}
+          activeCategoryId={activeCategoryId}
+          onSelect={onSelect}
+          depth={depth + 1}
+        />
       ))}
     </div>
   );

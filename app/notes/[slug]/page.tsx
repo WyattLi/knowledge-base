@@ -84,6 +84,14 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
               ))}
             </div>
           )}
+
+          {/* AI 摘要 */}
+          {(note as any).summary && (
+            <div className="mt-5 rounded-lg px-4 py-3 text-sm text-text-secondary leading-relaxed" style={{ background: "var(--surface)" }}>
+              <span className="text-xs text-text-muted">AI 摘要: </span>
+              {(note as any).summary}
+            </div>
+          )}
         </header>
 
         {/* Divider */}

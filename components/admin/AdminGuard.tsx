@@ -11,7 +11,7 @@ export function AdminGuard({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-5 h-5 rounded-full border border-white/20 border-t-white/60 animate-spin" />
+        <div className="w-5 h-5 rounded-full border border-[var(--border-medium)] border-t-[var(--accent-purple)] animate-spin" />
       </div>
     );
   }

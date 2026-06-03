@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { useGraphData } from "./useGraphData";
 import { useForceLayout } from "./useForceLayout";
 import { NoteDetailPanel } from "./NoteDetailPanel";
@@ -18,6 +19,7 @@ export default function GraphCanvas({
   tagId?: string;
 }) {
   const router = useRouter();
+  const { theme } = useTheme();
   const { data, loading, error } = useGraphData({ categoryId, tagId });
   const { nodePositions, edgeWeights, ready } = useForceLayout(data);
 
@@ -38,6 +40,12 @@ export default function GraphCanvas({
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const dragTrans = useRef({ x: 0, y: 0 });
+
+  // Node dragging
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const nodeDragOffsets = useRef(new Map<string, [number, number]>());
+  const nodeDragAnchor = useRef<{ mx: number; my: number; nx: number; ny: number } | null>(null);
+  const nodeWasDragged = useRef(false);
 
   // Adjacency map
   const adjacency = useMemo(() => {
@@ -70,6 +78,7 @@ export default function GraphCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const isDark = theme === "dark";
     const { x: tx, y: ty, scale } = transform.current;
     const W = canvas.width;
     const H = canvas.height;
@@ -84,15 +93,17 @@ export default function GraphCanvas({
     // Edges
     const allDimmed = hoveredId !== null || searchMatches.size > 0;
     data.edges.forEach(edge => {
-      const s = nodePositions.get(edge.source);
-      const t = nodePositions.get(edge.target);
+      const s = getNodePos(edge.source);
+      const t = getNodePos(edge.target);
       if (!s || !t) return;
       const isHL = allDimmed ? connectedIds.has(edge.source) && connectedIds.has(edge.target) : true;
       const isDM = allDimmed && !isHL;
       if (isDM) return; // don't draw dimmed edges
       const key = [edge.source, edge.target].sort().join("::");
       const w = edgeWeights.get(key) || 1;
-      ctx.strokeStyle = isHL ? `rgba(180,160,220,${0.4 + w * 0.1})` : "rgba(100,100,110,0.12)";
+      ctx.strokeStyle = isHL
+        ? (isDark ? `rgba(180,160,220,${0.4 + w * 0.1})` : `rgba(100,90,140,${0.35 + w * 0.1})`)
+        : (isDark ? "rgba(100,100,110,0.12)" : "rgba(180,180,190,0.25)");
       ctx.lineWidth = isHL ? 0.8 + w * 0.3 : 0.5;
       ctx.beginPath();
       ctx.moveTo(s[0], s[1]);
@@ -108,10 +119,10 @@ export default function GraphCanvas({
     };
 
     data.nodes.forEach(node => {
-      const pos = nodePositions.get(node.id);
+      const pos = getNodePos(node.id);
       if (!pos) return;
       const [nx, ny] = pos;
-      const color = node.tags[0]?.color || "#e0dfe6";
+      const color = node.tags[0]?.color || (isDark ? "#e0dfe6" : "#475569");
       const dimmed = isDimmed(node.id);
       const isHovered = node.id === hoveredId;
       const isSelected = selectedNode?.id === node.id;
@@ -162,8 +173,8 @@ export default function GraphCanvas({
       ctx.arc(nx, ny, r, 0, Math.PI * 2);
       ctx.fill();
 
-      // Highlight dot — brighter
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      // Highlight dot
+      ctx.fillStyle = isDark ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.7)";
       ctx.beginPath();
       ctx.arc(nx, ny, r * 0.45, 0, Math.PI * 2);
       ctx.fill();
@@ -172,7 +183,10 @@ export default function GraphCanvas({
       if (transform.current.scale > 0.3) {
         const fontSize = Math.max(10, 13 / transform.current.scale);
         ctx.font = `${fontSize}px system-ui, sans-serif`;
-        ctx.fillStyle = `rgba(230,225,235,${Math.min(1, (transform.current.scale - 0.3) * 1.8)})`;
+        const labelAlpha = Math.min(1, (transform.current.scale - 0.3) * 1.8);
+        ctx.fillStyle = isDark
+          ? `rgba(230,225,235,${labelAlpha})`
+          : `rgba(30,41,59,${labelAlpha})`;
         ctx.textAlign = "center";
         ctx.fillText(node.title, nx, ny + r + 8 + fontSize * 0.6);
       }
@@ -181,7 +195,7 @@ export default function GraphCanvas({
     });
 
     ctx.restore();
-  }, [data, nodePositions, edgeWeights, hoveredId, selectedNode, connectedIds, searchMatches]);
+  }, [data, nodePositions, edgeWeights, hoveredId, selectedNode, connectedIds, searchMatches, theme]);
 
   // Render loop with camera animation
   useEffect(() => {
@@ -258,12 +272,16 @@ export default function GraphCanvas({
     return { x: (sx - W / 2 - tx) / scale, y: (sy - H / 2 - ty) / scale };
   };
 
+  /** Get current position of a node (dragged override or force layout) */
+  const getNodePos = (id: string): [number, number] | undefined => {
+    return nodeDragOffsets.current.get(id) || nodePositions.get(id);
+  };
+
   const findNode = (wx: number, wy: number): GraphNode | null => {
     if (!data) return null;
-    // Reverse iterate for stacking order
     for (let i = data.nodes.length - 1; i >= 0; i--) {
       const n = data.nodes[i];
-      const pos = nodePositions.get(n.id);
+      const pos = getNodePos(n.id);
       if (!pos) continue;
       const dx = wx - pos[0];
       const dy = wy - pos[1];
@@ -274,6 +292,19 @@ export default function GraphCanvas({
 
   const onMouseDown = (e: React.MouseEvent) => {
     const { x, y } = getCanvasPos(e);
+    const world = screenToWorld(x, y);
+    const node = findNode(world.x, world.y);
+
+    if (node) {
+      // Start node drag
+      setDraggedNodeId(node.id);
+      const pos = getNodePos(node.id) || [world.x, world.y];
+      nodeDragAnchor.current = { mx: world.x, my: world.y, nx: pos[0], ny: pos[1] };
+      nodeWasDragged.current = false;
+      return;
+    }
+
+    // Start canvas pan
     dragStart.current = { x, y };
     dragTrans.current = { x: transform.current.x, y: transform.current.y };
     dragging.current = true;
@@ -281,6 +312,15 @@ export default function GraphCanvas({
 
   const onMouseMove = (e: React.MouseEvent) => {
     const { x, y } = getCanvasPos(e);
+
+    if (draggedNodeId && nodeDragAnchor.current) {
+      const world = screenToWorld(x, y);
+      const { mx, my, nx, ny } = nodeDragAnchor.current;
+      nodeDragOffsets.current.set(draggedNodeId, [nx + (world.x - mx), ny + (world.y - my)]);
+      nodeWasDragged.current = true;
+      return;
+    }
+
     if (dragging.current) {
       const dx = x - dragStart.current.x;
       const dy = y - dragStart.current.y;
@@ -303,10 +343,12 @@ export default function GraphCanvas({
 
   const onMouseUp = () => {
     dragging.current = false;
+    setDraggedNodeId(null);
+    nodeDragAnchor.current = null;
   };
 
   const onClick = (e: React.MouseEvent) => {
-    if (dragging.current) return;
+    if (dragging.current || nodeWasDragged.current) { nodeWasDragged.current = false; return; }
     const { x, y } = getCanvasPos(e);
     const world = screenToWorld(x, y);
     const node = findNode(world.x, world.y);
@@ -347,6 +389,9 @@ export default function GraphCanvas({
   const resetView = () => {
     transform.current = { x: 0, y: 0, scale: 1 };
     setViewOffset({ x: 0, y: 0, scale: 1 });
+    nodeDragOffsets.current.clear();
+    setDraggedNodeId(null);
+    nodeDragAnchor.current = null;
   };
 
   if (loading) {
@@ -381,11 +426,17 @@ export default function GraphCanvas({
       ref={containerRef}
       className="h-full w-full relative"
       style={{
-        background: `
+        background: theme === "dark"
+          ? `
           radial-gradient(ellipse 60% 50% at 50% 40%, rgba(139,92,246,0.06) 0%, transparent 70%),
           radial-gradient(ellipse 40% 40% at 25% 60%, rgba(34,211,238,0.04) 0%, transparent 65%),
           radial-gradient(ellipse 50% 35% at 75% 30%, rgba(99,102,241,0.04) 0%, transparent 60%),
           #080414
+        `
+          : `
+          radial-gradient(ellipse 60% 50% at 50% 40%, rgba(0,0,0,0.02) 0%, transparent 70%),
+          radial-gradient(ellipse 40% 40% at 25% 60%, rgba(0,0,0,0.015) 0%, transparent 65%),
+          #f8f7f4
         `,
       }}
     >
@@ -418,7 +469,7 @@ export default function GraphCanvas({
       </button>
 
       {/* Stats */}
-      <div className="absolute bottom-4 left-4 z-10 text-[10px] text-white/20">
+      <div className="absolute bottom-4 left-4 z-10 text-[10px] text-[var(--text-muted)]/40">
         {data.nodes.length} 节点 · {data.edges.length} 连线
       </div>
 
@@ -439,7 +490,7 @@ export default function GraphCanvas({
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-20 pointer-events-none bg-black/80 border border-white/10 rounded px-2 py-1 text-xs text-text-primary"
+          className="fixed z-20 pointer-events-none bg-[var(--bg-secondary)]/90 border border-[var(--border-medium)] rounded px-2 py-1 text-xs text-text-primary shadow-sm"
           style={{ left: tooltip.x, top: tooltip.y, transform: "translate(-50%, -100%)" }}
         >
           {tooltip.title}

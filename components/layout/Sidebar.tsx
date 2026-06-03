@@ -5,13 +5,13 @@ import { TagManager } from "@/components/tags/TagManager";
 
 export function Sidebar() {
   return (
-    <aside className="relative z-20 w-56 shrink-0 border-r border-nebula-purple/10 p-4 space-y-6 overflow-y-auto"
+    <aside className="relative z-20 w-56 shrink-0 border-r border-[var(--border-subtle)] p-4 space-y-6 overflow-y-auto"
       style={{
-        background: "linear-gradient(180deg, rgba(139,92,246,0.02) 0%, transparent 30%, transparent 70%, rgba(34,211,238,0.02) 100%)",
+        background: "var(--bg-elevated)",
       }}
     >
       <CategoryTree />
-      <div className="border-t border-nebula-purple/10 pt-4">
+      <div className="border-t border-[var(--border-subtle)] pt-4">
         <TagManager />
       </div>
     </aside>

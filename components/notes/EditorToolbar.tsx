@@ -14,7 +14,7 @@ function ToolBtn({ label, title, onClick }: { label: string; title: string; onCl
       type="button"
       title={title}
       onClick={onClick}
-      className="px-2 py-1 text-xs text-text-muted hover:text-text-primary hover:bg-white/5 rounded transition-colors"
+      className="px-2 py-1 text-xs text-text-muted hover:text-text-primary hover:bg-[var(--surface-hover)] rounded transition-colors"
     >
       {label}
     </button>
@@ -79,7 +79,7 @@ export function EditorToolbar({ onInsert, onImageUploading, editorRef }: Props) 
   };
 
   return (
-    <div className="flex items-center gap-0.5 px-2 py-1 border-b border-white/5">
+    <div className="flex items-center gap-0.5 px-2 py-1 border-b border-[var(--border-subtle)]">
       <ToolBtn label="B" title="粗体 (Ctrl+B)" onClick={() => wrapSelection("**", "**", "粗体")} />
       <ToolBtn label="I" title="斜体 (Ctrl+I)" onClick={() => wrapSelection("*", "*", "斜体")} />
       <ToolBtn label="H" title="标题" onClick={() => {
@@ -89,7 +89,7 @@ export function EditorToolbar({ onInsert, onImageUploading, editorRef }: Props) 
         const newVal = ta.value.slice(0, lineStart) + "## " + ta.value.slice(lineStart);
         onInsert(newVal);
       }} />
-      <span className="w-px h-4 bg-white/10 mx-1" />
+      <span className="w-px h-4 bg-[var(--surface-active)] mx-1" />
       <ToolBtn label="🔗" title="链接" onClick={() => wrapSelection("[", "](url)", "链接文本")} />
       <ToolBtn
         label="🖼"

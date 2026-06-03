@@ -96,14 +96,14 @@ export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteS
                 <label
                   key={s.slug}
                   className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
-                    selected.has(s.slug) ? "bg-nebula-purple/10" : "hover:bg-white/5"
+                    selected.has(s.slug) ? "bg-nebula-purple/10" : "hover:bg-[var(--surface-hover)]"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={selected.has(s.slug)}
                     onChange={() => toggle(s.slug)}
-                    className="mt-0.5 shrink-0 w-4 h-4 rounded border-white/20 bg-transparent accent-nebula-purple"
+                    className="mt-0.5 shrink-0 w-4 h-4 rounded border-[var(--border-medium)] bg-transparent accent-nebula-purple"
                   />
                   <div className="min-w-0">
                     <p className="text-sm text-text-primary truncate">{s.title}</p>
@@ -113,7 +113,7 @@ export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteS
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)]">
               <button
                 onClick={toggleAll}
                 className="text-xs text-text-muted hover:text-text-primary transition-colors"

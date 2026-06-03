@@ -20,7 +20,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
         {authed && (
           <Link
             href="/notes/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:bg-nebula-purple transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-nebula-purple/80 px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_var(--border-glow)] hover:bg-nebula-purple transition-colors"
           >
             + 新建笔记
           </Link>
@@ -43,7 +43,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-medium text-text-primary truncate">{note.title}</h3>
                   {note.status !== "published" && (
-                    <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-white/10 text-text-muted">
+                    <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-[var(--surface-active)] text-text-muted">
                       {note.status === "draft" ? "草稿" : "已归档"}
                     </span>
                   )}

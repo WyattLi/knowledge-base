@@ -1,58 +1,126 @@
 @import "tailwindcss";
 @import "highlight.js/styles/github-dark.css";
 
-/* ─── Cosmic Theme ─── */
-:root {
-  --space-black: #0d0814;
-  --space-deep: #120a1f;
-  --star-white: #f0edf5;
-  --star-blue: #a5b4fc;
-  --star-gold: #fcd34d;
-  --nebula-purple: #8b5cf6;
-  --nebula-cyan: #22d3ee;
+/* ══════════════════════════════════════════════
+   Semantic Design Tokens
+   Components use these — never hardcode colors
+   ══════════════════════════════════════════════ */
+
+/* ─── Dark Theme (Cosmic) ─── */
+[data-theme="dark"] {
+  --bg-primary: #0d0814;
+  --bg-secondary: #120a1f;
+  --bg-elevated: rgba(255, 255, 255, 0.03);
+
   --text-primary: #e0dfe6;
   --text-secondary: #9493a0;
-  --surface-glass: rgba(255, 255, 255, 0.04);
+  --text-muted: #6b6a75;
+
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #22d3ee;
+  --accent-blue: #a5b4fc;
+  --accent-gold: #fcd34d;
+
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.10);
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-medium: rgba(255, 255, 255, 0.10);
   --border-glow: rgba(139, 92, 246, 0.2);
-  --background: var(--space-black);
-  --foreground: var(--text-primary);
+
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* highlight.js light overrides in dark — keep dark theme */
+  --hljs-bg: #0d1117;
+  --hljs-text: #c9d1d9;
 }
 
+/* ─── Light Theme (Warm Gray) ─── */
+[data-theme="light"] {
+  --bg-primary: #f8f7f4;           /* warm paper gray */
+  --bg-secondary: #ffffff;          /* card surfaces */
+  --bg-elevated: #f3f2ef;           /* hover/raised */
+
+  --text-primary: #1e1e1e;          /* soft near-black */
+  --text-secondary: #5e5e5e;        /* readable secondary */
+  --text-muted: #949494;            /* placeholder/deemphasized */
+
+  --accent-purple: #7c3aed;         /* violet-600 */
+  --accent-cyan: #0891b2;           /* cyan-600 */
+  --accent-blue: #6366f1;           /* indigo-500 */
+  --accent-gold: #d97706;           /* amber-600 */
+
+  --surface: rgba(255, 255, 255, 0.75);     /* glass panels */
+  --surface-hover: rgba(0, 0, 0, 0.03);      /* subtle hover */
+  --surface-active: rgba(0, 0, 0, 0.06);      /* pressed/selected */
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.10);
+  --border-glow: rgba(124, 58, 237, 0.12);
+
+  --backdrop: rgba(0, 0, 0, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.05);
+
+  /* highlight.js overrides */
+  --hljs-bg: #f4f3f0;
+  --hljs-text: #24292f;
+}
+
+
+/* ─── Tailwind v4 @theme — maps tokens into Tailwind classes ─── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-space-black: var(--space-black);
-  --color-space-deep: var(--space-deep);
-  --color-star-white: var(--star-white);
-  --color-nebula-purple: var(--nebula-purple);
-  --color-nebula-cyan: var(--nebula-cyan);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-surface: var(--surface);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-medium: var(--border-medium);
+  --color-border-glow: var(--border-glow);
 }
 
+
 /* ─── Base ─── */
+html {
+  background: var(--bg-primary);
+}
+
 body {
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08), transparent),
-    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(34, 211, 238, 0.04), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139, 92, 246, 0.05), transparent),
-    var(--space-black);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
 
+/* Dark theme keeps the cosmic radial gradients */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08), transparent),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(34, 211, 238, 0.04), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139, 92, 246, 0.05), transparent),
+    var(--bg-primary);
+}
+
+
 /* ─── Glass surface ─── */
 .glass {
-  background: var(--surface-glass);
+  background: var(--surface);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-glow);
 }
 
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(124, 58, 237, 0.4);
+  background: var(--surface-hover);
+  border-color: var(--border-glow);
 }
+
 
 /* ─── Glow effects ─── */
 .glow-text {
@@ -63,25 +131,26 @@ body {
   box-shadow: 0 0 12px rgba(124, 58, 237, 0.3);
 }
 
+
 /* ─── Scrollbar ─── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.25);
+  background: var(--border-medium);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.45);
+  background: var(--text-muted);
 }
 
-/* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.25) transparent;
+  scrollbar-color: var(--border-medium) transparent;
 }
 
+
+/* ─── highlight.js light theme overrides ─── */
+[data-theme="light"] .hljs {
+  background: var(--hljs-bg);
+  color: var(--hljs-text);
+}

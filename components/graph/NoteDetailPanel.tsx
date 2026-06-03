@@ -29,7 +29,7 @@ export function NoteDetailPanel({ node, onClose }: Props) {
   }, [onClose]);
 
   return (
-    <div className="absolute right-0 top-0 bottom-0 w-[840px] max-w-[60vw] z-20 glass border-l border-white/10 overflow-y-auto shadow-[-4px_0_30px_rgba(0,0,0,0.5)]">
+    <div className="absolute right-0 top-0 bottom-0 w-[840px] max-w-[60vw] z-20 glass border-l border-[var(--border-medium)] overflow-y-auto shadow-[-4px_0_30px_var(--shadow-color)]">
       {/* Close button */}
       <button
         onClick={onClose}
@@ -64,7 +64,7 @@ export function NoteDetailPanel({ node, onClose }: Props) {
         )}
 
         {/* Divider */}
-        <div className="border-t border-white/10 mb-4" />
+        <div className="border-t border-[var(--border-medium)] mb-4" />
 
         {/* Content */}
         {loading ? (
@@ -80,7 +80,7 @@ export function NoteDetailPanel({ node, onClose }: Props) {
         )}
 
         {/* Actions */}
-        <div className="mt-6 pt-4 border-t border-white/10">
+        <div className="mt-6 pt-4 border-t border-[var(--border-medium)]">
           <Link
             href={`/notes/${node.slug}`}
             className="inline-block text-sm text-nebula-purple hover:text-nebula-cyan transition-colors"

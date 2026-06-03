@@ -55,13 +55,13 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
             <span>{note.wordCount?.toLocaleString()} 字</span>
-            <span className="text-white/20">·</span>
+            <span className="text-[var(--text-muted)]">·</span>
             <span>{new Date(note.updatedAt!).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
             {note.status !== "published" && (
               <>
-                <span className="text-white/20">·</span>
+                <span className="text-[var(--text-muted)]">·</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${
-                  note.status === "draft" ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-text-muted"
+                  note.status === "draft" ? "bg-yellow-500/20 text-yellow-400" : "bg-[var(--surface-active)] text-text-muted"
                 }`}>
                   {note.status === "draft" ? "草稿" : "已归档"}
                 </span>
@@ -87,13 +87,13 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
         </header>
 
         {/* Divider */}
-        <div className="border-t border-white/10 mb-10" />
+        <div className="border-t border-[var(--border-medium)] mb-10" />
 
         {/* Content */}
         <MarkdownRenderer content={note.content as string} />
 
         {/* Divider */}
-        <div className="border-t border-white/10 mt-12 mb-10" />
+        <div className="border-t border-[var(--border-medium)] mt-12 mb-10" />
 
         {/* Outgoing links */}
         {outgoingLinks.length > 0 && (
@@ -104,7 +104,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
                 <Link
                   key={i}
                   href={`/notes/${link.targetSlug}`}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-white/3 transition-colors"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
                 >
                   <span className={link.targetExists ? "text-nebula-cyan" : "text-text-muted/40"}>
                     &#x2197;
@@ -126,7 +126,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
                 <Link
                   key={bl.id}
                   href={`/notes/${bl.sourceSlug}`}
-                  className="block rounded-lg px-3 py-2.5 hover:bg-white/3 transition-colors"
+                  className="block rounded-lg px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
                 >
                   <span className="text-sm font-medium text-text-primary">{bl.sourceTitle}</span>
                   {bl.context && (
@@ -139,7 +139,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
         )}
 
         {backlinks.length === 0 && outgoingLinks.length === 0 && (
-          <div className="text-center py-8 text-text-muted/40 text-sm border-t border-white/5 pt-10 mt-8">
+          <div className="text-center py-8 text-text-muted/40 text-sm border-t border-[var(--border-subtle)] pt-10 mt-8">
             暂无链接关系
           </div>
         )}

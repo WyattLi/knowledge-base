@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 type StarColor = "white" | "purple" | "cyan" | "gold";
 
@@ -37,6 +38,16 @@ interface Nebula {
   alpha: number;
 }
 
+interface LightBlob {
+  x: number;
+  y: number;
+  r: number;
+  vx: number;
+  vy: number;
+  color: string;
+  alpha: number;
+}
+
 const STAR_COLORS: Record<StarColor, string> = {
   white: "200,210,255",
   purple: "180,160,240",
@@ -46,6 +57,9 @@ const STAR_COLORS: Record<StarColor, string> = {
 
 export default function CosmicBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { theme } = useTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,20 +74,22 @@ export default function CosmicBackground() {
     const nearStars: DriftStar[] = [];
     const meteors: Meteor[] = [];
     const nebulas: Nebula[] = [];
+    const lightBlobs: LightBlob[] = [];
 
     function resize() {
       width = window.innerWidth;
       height = window.innerHeight;
       canvas!.width = width;
       canvas!.height = height;
-      initStars();
+      initElements();
     }
 
-    function initStars() {
+    function initElements() {
       farStars.length = 0;
       nearStars.length = 0;
       meteors.length = 0;
       nebulas.length = 0;
+      lightBlobs.length = 0;
 
       // Nebula glows: soft purple/violet ambient patches
       const nebulaColors = [
@@ -132,6 +148,25 @@ export default function CosmicBackground() {
           lastSpawn: performance.now(),
         });
       }
+
+      // Light theme: slow-moving geometric blobs
+      const lightPalette = [
+        "148,163,184",  // slate-400
+        "203,213,225",  // slate-300
+        "165,180,252",  // indigo-300
+        "167,139,250",  // violet-300
+      ];
+      for (let i = 0; i < 8; i++) {
+        lightBlobs.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 200 + 120,
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: (Math.random() - 0.5) * 0.15,
+          color: lightPalette[Math.floor(Math.random() * lightPalette.length)],
+          alpha: Math.random() * 0.04 + 0.02,
+        });
+      }
     }
 
     function randomColor(): StarColor {
@@ -141,6 +176,28 @@ export default function CosmicBackground() {
 
     function draw(time: number) {
       ctx!.clearRect(0, 0, width, height);
+
+      // ── Light theme: geometric blobs ──
+      if (themeRef.current === "light") {
+        for (const b of lightBlobs) {
+          b.x += b.vx;
+          b.y += b.vy;
+          if (b.x < -b.r) b.x = width + b.r;
+          if (b.x > width + b.r) b.x = -b.r;
+          if (b.y < -b.r) b.y = height + b.r;
+          if (b.y > height + b.r) b.y = -b.r;
+
+          const gradient = ctx!.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+          gradient.addColorStop(0, `rgba(${b.color},${b.alpha.toFixed(3)})`);
+          gradient.addColorStop(1, "rgba(0,0,0,0)");
+          ctx!.fillStyle = gradient;
+          ctx!.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+        }
+        animationId = requestAnimationFrame(draw);
+        return;
+      }
+
+      // ── Dark theme: cosmic starfield ──
 
       // Nebula glows: soft ambient patches of colored light
       for (const n of nebulas) {

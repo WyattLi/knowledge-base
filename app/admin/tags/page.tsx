@@ -104,14 +104,14 @@ export default function TagsAdminPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-5 h-5 rounded-full border border-white/20 border-t-white/60 animate-spin" />
+          <div className="w-5 h-5 rounded-full border border-[var(--border-medium)] border-t-[var(--accent-purple)] animate-spin" />
         </div>
       ) : (
         <>
           <div className="glass rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/5 text-text-secondary text-left">
+                <tr className="border-b border-[var(--border-subtle)] text-text-secondary text-left">
                   <th className="px-4 py-3 font-medium">名称</th>
                   <th className="px-4 py-3 font-medium">Slug</th>
                   <th className="px-4 py-3 font-medium">颜色</th>
@@ -121,7 +121,7 @@ export default function TagsAdminPage() {
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                  <tr key={item.id} className="border-b border-[var(--border-subtle)] hover:bg-[var(--surface-hover)] transition-colors">
                     <td className="px-4 py-3 text-text-primary">{item.name}</td>
                     <td className="px-4 py-3 text-text-muted font-mono text-xs">{item.slug}</td>
                     <td className="px-4 py-3">
@@ -136,7 +136,7 @@ export default function TagsAdminPage() {
                         className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
                           item.enabled
                             ? "bg-green-500/20 text-green-400"
-                            : "bg-white/10 text-text-muted"
+                            : "bg-[var(--surface-active)] text-text-muted"
                         }`}
                       >
                         {item.enabled ? "启用" : "禁用"}
@@ -238,7 +238,7 @@ export default function TagsAdminPage() {
               type="checkbox"
               checked={form.enabled}
               onChange={e => setForm({ ...form, enabled: e.target.checked })}
-              className="w-4 h-4 rounded border-white/20 bg-transparent accent-nebula-purple"
+              className="w-4 h-4 rounded border-[var(--border-medium)] bg-transparent accent-nebula-purple"
             />
             启用
           </label>

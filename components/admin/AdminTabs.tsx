@@ -11,7 +11,7 @@ export function AdminTabs() {
   ];
 
   return (
-    <div className="flex gap-1 border-b border-white/5 px-6">
+    <div className="flex gap-1 border-b border-[var(--border-subtle)] px-6">
       {tabs.map((tab) => (
         <Link
           key={tab.href}

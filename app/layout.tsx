@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import CosmicBackgroundWrapper from "@/components/background/CosmicBackgroundWrapper";
 import { AppShell } from "@/components/layout/AppShell";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Knowledge Base — 个人知识库",
@@ -10,10 +11,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN" className="h-full antialiased">
+    <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
       <body className="h-full flex flex-col relative overflow-hidden">
-        <CosmicBackgroundWrapper />
-        <AppShell>{children}</AppShell>
+        <ThemeProvider>
+          <CosmicBackgroundWrapper />
+          <AppShell>{children}</AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -156,25 +156,14 @@ export async function suggestRelatedNotes(
 ): Promise<SuggestResult[]> {
   if (candidates.length === 0) return [];
 
+  const skill = loadSkill("suggest-related");
   const candidateList = candidates
     .map(c => `slug: ${c.slug}\ntitle: ${c.title}\n摘要: ${c.summary || "（无摘要）"}`)
     .join("\n\n---\n\n");
 
-  const prompt = `你是一个知识库助手。给定一篇新笔记，从候选列表中找出与之最相关的已有笔记。
+  const prompt = renderSkill(skill.body, { title, summary, candidates: candidateList });
 
-## 当前笔记
-标题：${title}
-摘要：${summary}
-
-## 候选笔记
-${candidateList}
-
-## 要求
-返回一个 JSON 数组，每项包含 slug、title、reason（用中文简短说明为什么相关，15字以内）。按关联度从高到低排序。只返回真正相关的。最多 10 条。
-
-直接返回 JSON 数组，不要 markdown 代码块。`;
-
-  const raw = await chat(prompt, 2000);
+  const raw = await chat(prompt, skill.metadata.maxTokens || 2000);
   const parsed = parseJsonArray(raw);
   return parsed.slice(0, 10);
 }

@@ -47,14 +47,14 @@ export function CategoryTree() {
 
   if (loading) return (
     <div className="flex items-center gap-2 px-3 py-2">
-      <div className="w-3 h-3 rounded-full bg-nebula-purple/30 animate-pulse" />
+      <div className="w-3 h-3 rounded-full bg-text-muted/30 animate-pulse" />
       <span className="text-text-muted text-sm">加载中...</span>
     </div>
   );
 
   return (
     <div className="space-y-0.5">
-      <h3 className="text-[11px] font-semibold text-nebula-purple/80 uppercase tracking-[0.1em] px-1 mb-3">
+      <h3 className="text-[11px] font-semibold text-text-primary uppercase tracking-[0.1em] px-1 mb-3">
         &#x25C6; 分类
       </h3>
 
@@ -94,11 +94,13 @@ function CategoryNode({
       {/* Connector line to parent */}
       {depth > 0 && (
         <span
-          className="absolute border-l border-nebula-purple/10 group-hover:border-nebula-purple/25 transition-colors"
+          className="absolute border-l transition-colors"
           style={{
             left: `${depth * 14 - 1}px`,
             top: 0,
             height: "100%",
+            borderColor: "var(--accent-purple)",
+            opacity: 0.1,
           }}
         />
       )}

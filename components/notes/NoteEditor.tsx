@@ -217,6 +217,14 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
           </div>
 
           <div className="flex-1 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleGenerateSummary}
+              disabled={generatingSummary}
+              className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-40"
+            >
+              {generatingSummary ? "生成中..." : "AI 摘要"}
+            </button>
             <Button
               type="button"
               variant="ghost"
@@ -256,22 +264,14 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
       </div>
 
       {/* Summary */}
-      <div className="shrink-0 mb-2 flex items-start gap-2">
+      <div className="shrink-0 mb-2">
         <textarea
           value={summary}
           onChange={e => setSummary(e.target.value)}
           placeholder="AI 摘要（可选）"
           rows={2}
-          className="flex-1 glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
+          className="w-full glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
         />
-        <button
-          type="button"
-          onClick={handleGenerateSummary}
-          disabled={generatingSummary}
-          className="shrink-0 rounded-lg px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-40"
-        >
-          {generatingSummary ? "生成中..." : "AI 摘要"}
-        </button>
       </div>
 
       {/* Toolbar */}
@@ -326,6 +326,9 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
         title={title}
         content={content}
         noteSlug={noteSlug}
+        summary={summary}
+        onSummaryGenerated={(s) => setSummary(s)}
+        existingSlugs={[...content.matchAll(/\[\[([^\]|]+?)(?:\|[^\]]+?)?\]\]/g)].map(m => m[1].trim())}
         onConfirm={(slugs) => {
           const links = slugs.map(s => `- [[${s}]]`).join("\n");
           setContent(prev => prev.trimEnd() + `\n\n## 相关笔记\n\n${links}\n`);

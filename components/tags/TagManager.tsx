@@ -47,14 +47,14 @@ export function TagManager() {
 
   if (loading) return (
     <div className="flex items-center gap-2 px-3 py-2">
-      <div className="w-3 h-3 rounded-full bg-nebula-cyan/30 animate-pulse" />
+      <div className="w-3 h-3 rounded-full bg-text-muted/30 animate-pulse" />
       <span className="text-text-muted text-sm">加载中...</span>
     </div>
   );
 
   return (
     <div className="space-y-3">
-      <h3 className="text-[11px] font-semibold text-nebula-cyan/80 uppercase tracking-[0.1em] px-1">
+      <h3 className="text-[11px] font-semibold text-text-secondary uppercase tracking-[0.1em] px-1">
         &#x2726; 标签
       </h3>
 

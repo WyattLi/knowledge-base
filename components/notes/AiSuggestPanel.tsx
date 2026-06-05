@@ -16,9 +16,12 @@ interface Props {
   title: string;
   content: string;
   noteSlug?: string;
+  summary?: string;
+  onSummaryGenerated?: (summary: string) => void;
+  existingSlugs?: string[];
 }
 
-export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteSlug }: Props) {
+export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteSlug, summary: providedSummary, onSummaryGenerated, existingSlugs }: Props) {
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -35,12 +38,18 @@ export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteS
           title: title.trim(),
           content: content.trim(),
           excludeSlug: noteSlug || undefined,
+          summary: providedSummary?.trim() || undefined,
+          existingSlugs: existingSlugs || undefined,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setSuggestions(data.suggestions || []);
         setSelected(new Set());
+        // If no summary was provided but API generated one, pass it back
+        if (!providedSummary?.trim() && data.summary && onSummaryGenerated) {
+          onSummaryGenerated(data.summary);
+        }
       } else {
         setError(data.error || "请求失败");
       }
@@ -48,7 +57,7 @@ export function AiSuggestPanel({ open, onClose, onConfirm, title, content, noteS
       setError("网络错误");
     }
     setLoading(false);
-  }, [title, content, noteSlug]);
+  }, [title, content, noteSlug, providedSummary, existingSlugs, onSummaryGenerated]);
 
   useEffect(() => {
     if (open) fetchSuggestions();

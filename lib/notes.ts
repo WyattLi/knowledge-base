@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { notes, noteLinks, noteTags, tags, categories, noteContent } from "./schema";
-import { eq, ne, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, ne, desc, and, sql, inArray, notInArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 import { blobPut, blobGet, blobDelete, blobMove } from "./blob";
@@ -307,7 +307,13 @@ export async function prefilterCandidates(
   currentTagIds: string[],
   currentCategoryId: string | null,
   excludeSlug?: string,
+  excludeSlugs?: string[],
 ): Promise<{ slug: string; title: string; summary: string }[]> {
+  // Build exclusion conditions
+  const excludeConditions: any[] = [];
+  if (excludeSlug) excludeConditions.push(ne(notes.slug, excludeSlug));
+  if (excludeSlugs && excludeSlugs.length > 0) excludeConditions.push(notInArray(notes.slug, excludeSlugs));
+
   // Fetch all notes with their summaries and tags
   const allNotes = await db
     .select({
@@ -318,7 +324,7 @@ export async function prefilterCandidates(
     })
     .from(notes)
     .leftJoin(noteContent, eq(notes.id, noteContent.noteId))
-    .where(excludeSlug ? and(ne(notes.slug, excludeSlug)) : undefined);
+    .where(excludeConditions.length > 0 ? and(...excludeConditions) : undefined);
 
   // Fetch tags per note for scoring
   const noteTagsList = await db
@@ -359,9 +365,30 @@ export async function prefilterCandidates(
     return { slug: n.slug, title: n.title, summary: n.summary || "", score };
   });
 
-  // Sort by score desc, take top 20
+  // Sort by score desc
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 20).map(({ slug, title, summary }) => ({ slug, title, summary }));
+
+  // ① Threshold filter: score ≥ 2 (at least one shared tag = 2 or one keyword = 3)
+  const aboveThreshold = scored.filter(n => n.score >= 2);
+  if (aboveThreshold.length === 0) return [];
+
+  // ② Gap detection: find the largest drop between adjacent scores
+  let cutoff = aboveThreshold.length;
+  let maxGap = 0;
+  for (let i = 1; i < aboveThreshold.length; i++) {
+    const gap = aboveThreshold[i - 1].score - aboveThreshold[i].score;
+    if (gap > maxGap) {
+      maxGap = gap;
+      cutoff = i;
+    }
+  }
+  // Only treat gap ≥ 3 as significant
+  if (maxGap < 3) cutoff = aboveThreshold.length;
+
+  // ③ Cap: at most 50
+  cutoff = Math.min(cutoff, 50);
+
+  return aboveThreshold.slice(0, cutoff).map(({ slug, title, summary }) => ({ slug, title, summary }));
 }
 
 /** Extract meaningful Chinese/English keywords from text for matching */

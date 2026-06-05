@@ -1,14 +1,8 @@
 import { db } from "./db";
 import { categories, notes } from "./schema";
-import { eq, asc, sql, inArray } from "drizzle-orm";
+import { eq, ne, and, asc, sql, inArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
-import slugify from "slugify";
 import { blobMove } from "./blob";
-
-function makeSlug(name: string): string {
-  const s = slugify(name, { lower: true, strict: true });
-  return (s || name).slice(0, 100);
-}
 
 export async function listCategories() {
   const all = await db.select().from(categories)
@@ -61,7 +55,7 @@ export async function makeNoteKey(categoryId: string | null, noteSlug: string): 
 }
 
 /** Get all descendant category IDs (including self) */
-async function getDescendantIds(categoryId: string): Promise<string[]> {
+export async function getDescendantIds(categoryId: string): Promise<string[]> {
   const result: string[] = [categoryId];
   const children = await db.select({ id: categories.id })
     .from(categories)
@@ -73,12 +67,15 @@ async function getDescendantIds(categoryId: string): Promise<string[]> {
 }
 
 export async function createCategory(data: { name: string; description?: string; parentId?: string; sortOrder?: number }) {
+  // Check slug uniqueness (slug = name)
+  const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, data.name)).limit(1);
+  if (existing) throw new Error(`分类名称 "${data.name}" 已存在`);
+
   const id = uuid();
-  const slug = makeSlug(data.name);
   await db.insert(categories).values({
     id,
     name: data.name,
-    slug,
+    slug: data.name,
     description: data.description || null,
     parentId: data.parentId || null,
     sortOrder: data.sortOrder || 0,
@@ -96,8 +93,15 @@ export async function updateCategory(id: string, data: { name?: string; descript
 
   const updates: any = {};
   if (data.name !== undefined) {
+    // Check slug uniqueness (slug = name), excluding current category
+    const [dup] = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(and(eq(categories.slug, data.name), ne(categories.id, id)))
+      .limit(1);
+    if (dup) throw new Error(`分类名称 "${data.name}" 已存在`);
     updates.name = data.name;
-    updates.slug = makeSlug(data.name);
+    updates.slug = data.name;
   }
   if (data.description !== undefined) updates.description = data.description || null;
   if (data.parentId !== undefined) updates.parentId = data.parentId;

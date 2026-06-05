@@ -4,7 +4,7 @@ import { eq, ne, desc, and, sql, inArray, notInArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 import { blobPut, blobGet, blobDelete, blobMove } from "./blob";
-import { makeNoteKey } from "./categories";
+import { makeNoteKey, getDescendantIds } from "./categories";
 import { generateSummary } from "./ai";
 
 /** Extract internal link targets from markdown: [[target]] and [text](target) — skips http URLs */
@@ -84,7 +84,10 @@ export async function listNotes(options?: {
 }) {
   const conditions = [];
   if (options?.status) conditions.push(eq(notes.status, options.status as any));
-  if (options?.categoryId) conditions.push(eq(notes.categoryId, options.categoryId));
+  if (options?.categoryId) {
+    const descendants = await getDescendantIds(options.categoryId);
+    conditions.push(inArray(notes.categoryId, descendants));
+  }
   // Support both single tagId (backward compat) and multiple tagIds
   const effectiveTagIds = options?.tagIds?.length ? options.tagIds : (options?.tagId ? [options.tagId] : []);
   if (effectiveTagIds.length > 0) {

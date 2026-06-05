@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { notes, noteLinks, noteTags, tags } from "./schema";
 import { eq, and, or, isNotNull, sql, inArray } from "drizzle-orm";
+import { getDescendantIds } from "./categories";
 
 export interface GraphNode {
   id: string;
@@ -26,7 +27,8 @@ export async function getGraphData(filter?: {
 }): Promise<{ nodes: GraphNode[]; edges: GraphEdge[] }> {
   const conditions = [eq(notes.status, "published")];
   if (filter?.categoryId) {
-    conditions.push(eq(notes.categoryId, filter.categoryId));
+    const descendants = await getDescendantIds(filter.categoryId);
+    conditions.push(inArray(notes.categoryId, descendants));
   }
   if (filter?.tagId) {
     conditions.push(inArray(notes.id, db.select({ noteId: noteTags.noteId }).from(noteTags).where(eq(noteTags.tagId, filter.tagId))));

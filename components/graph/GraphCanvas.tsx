@@ -8,8 +8,8 @@ import { useForceLayout } from "./useForceLayout";
 import { NoteDetailPanel } from "./NoteDetailPanel";
 import type { GraphNode } from "./types";
 
-const NODE_R = 7;
-const HOVER_R = 11;
+const NODE_R = 3;
+const HOVER_R = 5;
 
 export default function GraphCanvas({
   categoryId,
@@ -181,7 +181,7 @@ export default function GraphCanvas({
 
       // Show label when zoomed in
       if (transform.current.scale > 0.3) {
-        const fontSize = Math.max(10, 13 / transform.current.scale);
+        const fontSize = Math.max(7, 10 / transform.current.scale);
         ctx.font = `${fontSize}px system-ui, sans-serif`;
         const labelAlpha = Math.min(1, (transform.current.scale - 0.3) * 1.8);
         ctx.fillStyle = isDark

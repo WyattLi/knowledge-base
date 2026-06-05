@@ -129,8 +129,19 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
     setGeneratingSummary(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Ctrl+S to save without leaving
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        doSave(false);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  });
+
+  const doSave = async (navigateAway: boolean) => {
     if (!title.trim() || !content.trim()) {
       setError("标题和内容不能为空");
       return;
@@ -149,13 +160,24 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
 
     if (res.ok) {
       const note = await res.json();
-      router.push(`/notes/${note.slug}`);
-      router.refresh();
+      if (navigateAway) {
+        router.push(`/notes/${note.slug}`);
+        router.refresh();
+      } else if (!noteSlug) {
+        // New note saved via Ctrl+S: navigate to its edit page so slug updates
+        router.replace(`/notes/${note.slug}/edit`);
+      }
+      setSaving(false);
     } else {
       const d = await res.json();
       setError(d.error || "保存失败");
       setSaving(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    doSave(true);
   };
 
   const treeOptions = flattenTree(allCategories).map(c => ({ cat: c, depth: c.depth }));
@@ -166,8 +188,9 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
         <div className="shrink-0 mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
-      {/* Header */}
-      <div className="shrink-0 space-y-4 mb-3">
+      {/* Scrollable body: title, controls, tags, toolbar, summary, editor all scroll together */}
+      <div className="flex-1 overflow-y-auto space-y-3">
+        {/* Title */}
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -175,7 +198,8 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
           className="w-full glass rounded-xl px-4 py-2.5 text-lg font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
         />
 
-        <div className="flex flex-wrap items-center gap-4">
+        {/* Controls row: category, status, split, actions */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-2 items-center">
             <label className="text-xs text-text-muted">分类</label>
             <select
@@ -204,17 +228,15 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             </select>
           </div>
 
-          <div className="flex gap-2 items-center">
-            <button
-              type="button"
-              onClick={() => setSplitMode(!splitMode)}
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                splitMode ? "text-text-primary" : "text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)]"
-              }`}
-            >
-              {splitMode ? "分栏" : "纯编辑"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSplitMode(!splitMode)}
+            className={`text-xs px-2 py-1 rounded transition-colors ${
+              splitMode ? "text-text-primary" : "text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)]"
+            }`}
+          >
+            {splitMode ? "分栏" : "纯编辑"}
+          </button>
 
           <div className="flex-1 flex justify-end gap-2">
             <button
@@ -240,10 +262,8 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>取消</Button>
           </div>
         </div>
-      </div>
 
-      {/* Tags */}
-      <div className="shrink-0 mb-2">
+        {/* Tags */}
         <div className="flex flex-wrap gap-1">
           {allTags.map(tag => (
             <button
@@ -261,64 +281,70 @@ export function NoteEditor({ initialData, noteSlug }: { initialData?: Partial<No
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Summary */}
-      <div className="shrink-0 mb-2">
-        <textarea
-          value={summary}
-          onChange={e => setSummary(e.target.value)}
-          placeholder="AI 摘要（可选）"
-          rows={2}
-          className="w-full glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
-        />
-      </div>
-
-      {/* Toolbar */}
-      {uploading && (
-        <div className="shrink-0 text-xs text-nebula-cyan/60 px-2">图片上传中...</div>
-      )}
-      <div className="shrink-0">
+        {/* Toolbar */}
+        {uploading && (
+          <div className="text-xs text-nebula-cyan/60 leading-none">图片上传中...</div>
+        )}
         <EditorToolbar
           editorRef={editorRef}
           onInsert={(text) => setContent(text)}
           onImageUploading={setUploading}
         />
-      </div>
 
-      {/* Content area */}
-      {splitMode ? (
-        <div className="flex-1 flex gap-3 min-h-0">
-          {/* Editor pane */}
-          <textarea
-            ref={editorRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onScroll={handleEditorScroll}
-            onPaste={handlePaste}
-            placeholder="Markdown 内容..."
-            className="flex-1 glass rounded-xl p-4 text-sm text-text-primary font-mono placeholder:text-text-muted resize-none focus:outline-none overflow-y-auto"
-          />
-          {/* Preview pane */}
-          <div
-            ref={previewRef}
-            className="flex-1 glass rounded-xl p-6 overflow-y-auto"
-          >
-            {content.trim() ? (
-              <MarkdownRenderer content={content} />
-            ) : (
-              <p className="text-text-muted/40 text-sm text-center mt-20">预览将显示在这里</p>
-            )}
-          </div>
-        </div>
-      ) : (
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Markdown 内容..."
-          className="flex-1 w-full glass rounded-xl p-4 text-sm text-text-primary font-mono placeholder:text-text-muted resize-none focus:outline-none"
-        />
-      )}
+        {/* Summary + Editor/Preview */}
+        {splitMode ? (
+          <>
+            <textarea
+              value={summary}
+              onChange={e => setSummary(e.target.value)}
+              placeholder="AI 摘要（可选）"
+              rows={5}
+              className="w-full glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
+            />
+            <div className="flex gap-3" style={{ minHeight: "60vh" }}>
+              {/* Editor pane */}
+              <textarea
+                ref={editorRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onScroll={handleEditorScroll}
+                onPaste={handlePaste}
+                placeholder="Markdown 内容..."
+                className="flex-1 glass rounded-xl p-4 text-sm text-text-primary font-mono placeholder:text-text-muted resize-none focus:outline-none overflow-y-auto"
+              />
+              {/* Preview pane */}
+              <div
+                ref={previewRef}
+                className="flex-1 glass rounded-xl p-6 overflow-y-auto"
+              >
+                {content.trim() ? (
+                  <MarkdownRenderer content={content} />
+                ) : (
+                  <p className="text-text-muted/40 text-sm text-center mt-20">预览将显示在这里</p>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <textarea
+              value={summary}
+              onChange={e => setSummary(e.target.value)}
+              placeholder="AI 摘要（可选）"
+              rows={1}
+              className="w-full glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none resize-none"
+            />
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Markdown 内容..."
+              className="w-full glass rounded-xl p-4 text-sm text-text-primary font-mono placeholder:text-text-muted resize-none focus:outline-none"
+              style={{ minHeight: "60vh" }}
+            />
+          </>
+        )}
+      </div>
 
       <AiSuggestPanel
         open={aiOpen}

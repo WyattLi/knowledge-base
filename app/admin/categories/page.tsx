@@ -22,6 +22,7 @@ export default function CategoriesAdminPage() {
   const [editItem, setEditItem] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", description: "", parentId: "", sortOrder: 0, enabled: true });
   const [showCreate, setShowCreate] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -34,6 +35,7 @@ export default function CategoriesAdminPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     const res = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,12 +50,16 @@ export default function CategoriesAdminPage() {
       setShowCreate(false);
       setForm({ name: "", description: "", parentId: "", sortOrder: 0, enabled: true });
       fetchData();
+    } else {
+      const d = await res.json();
+      setError(d.error || "创建失败");
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editItem) return;
+    setError("");
     const res = await fetch(`/api/categories/${editItem.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -68,6 +74,9 @@ export default function CategoriesAdminPage() {
     if (res.ok) {
       setEditItem(null);
       fetchData();
+    } else {
+      const d = await res.json();
+      setError(d.error || "更新失败");
     }
   };
 
@@ -106,6 +115,9 @@ export default function CategoriesAdminPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">{error}</div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-text-primary">分类管理</h1>
         <button

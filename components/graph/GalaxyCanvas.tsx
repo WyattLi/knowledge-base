@@ -274,7 +274,7 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
           ctx.restore();
         }
 
-        const showLabel = isSelected || isHovered || (node.importance >= 4 && effectiveOpacity > 0.5);
+        const showLabel = isSelected || isHovered || (node.importance >= 2 && effectiveOpacity > 0.5);
         if (showLabel) {
           const labelY = sy + r + 14;
           ctx.font = `${Math.round(10 + scale * 2)}px OPPOSans4, PingFang SC, sans-serif`;
@@ -286,7 +286,7 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
           ctx.shadowBlur = 0;
         }
 
-        hitTargets.push({ id: node.id, sx, sy, r: Math.max(r, 10) });
+        hitTargets.push({ id: node.id, sx, sy, r: Math.max(r, 18) });
       });
       projectedNodesRef.current = hitTargets;
       animFrameRef.current = requestAnimationFrame(render);
@@ -314,7 +314,13 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
     };
   }, []);
 
-  // Mouse — canvas fills viewport, use clientX/Y directly (matching xingtu-demo)
+  // Convert viewport coords to canvas-local (canvas is not full-viewport)
+  const toLocal = useCallback((clientX: number, clientY: number) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: clientX, y: clientY };
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     isDraggingRef.current = true;
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
@@ -329,14 +335,15 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
       targetRotXRef.current += dy * 0.006;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
     } else {
+      const local = toLocal(e.clientX, e.clientY);
       const hits = projectedNodesRef.current;
       let hovered: string | null = null;
       for (const h of hits) {
-        if (Math.hypot(e.clientX - h.sx, e.clientY - h.sy) < h.r + 6) { hovered = h.id; break; }
+        if (Math.hypot(local.x - h.sx, local.y - h.sy) < h.r + 6) { hovered = h.id; break; }
       }
       onNodeHover(hovered);
     }
-  }, [onNodeHover]);
+  }, [onNodeHover, toLocal]);
 
   const handleMouseUp = useCallback(() => {
     isDraggingRef.current = false;
@@ -345,27 +352,22 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
   }, []);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
+    const local = toLocal(e.clientX, e.clientY);
     const hits = projectedNodesRef.current;
     for (const h of hits) {
-      if (Math.hypot(e.clientX - h.sx, e.clientY - h.sy) < h.r + 6) {
+      if (Math.hypot(local.x - h.sx, local.y - h.sy) < h.r + 6) {
         onNodeClick(h.id);
         return;
       }
     }
     onNodeClick(null);
-  }, [onNodeClick]);
+  }, [onNodeClick, toLocal]);
 
-  // Native wheel listener (React's onWheel is passive, can't preventDefault)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const handler = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      targetZoomRef.current = Math.min(3, Math.max(0.4, targetZoomRef.current + delta));
-    };
-    canvas.addEventListener('wheel', handler, { passive: false });
-    return () => canvas.removeEventListener('wheel', handler);
+  // Wheel zoom on the container (canvas might not always receive events)
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    targetZoomRef.current = Math.min(3, Math.max(0.4, targetZoomRef.current + delta));
   }, []);
 
   const handleMouseLeave = useCallback(() => {
@@ -415,7 +417,7 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 bg-black">
+    <div ref={containerRef} className="absolute inset-0 bg-black" onWheel={handleWheel}>
       <canvas
         ref={canvasRef}
         className="absolute inset-0"
@@ -456,7 +458,7 @@ export function buildGalaxyNodes(
       x: pos[0],
       y: pos[1],
       z: pos[2],
-      importance: Math.min(5, Math.max(1, Math.ceil(n.linkCount / 2))),
+      importance: Math.min(5, Math.max(2, Math.ceil(n.citationCount / 2) + 1)),
       tags: n.tags.map(t => t.name),
       summary: n.summary || '',
       categoryId: n.categoryId,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { isAuthenticatedServer } from "@/lib/auth";
 import { listNotes } from "@/lib/notes";
+import GalaxyPageBackground from "@/components/background/GalaxyPageBackground";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,9 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="relative">
+      <GalaxyPageBackground />
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -65,6 +68,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

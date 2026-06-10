@@ -25,13 +25,13 @@ export function Navbar({ children }: { children?: React.ReactNode }) {
           </Link>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          {/* <button
             onClick={toggleTheme}
             className="rounded-lg px-2 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] transition-colors"
             title={theme === "light" ? "切换暗色主题" : "切换浅色主题"}
           >
             {theme === "light" ? "☀️" : "🌙"}
-          </button>
+          </button> */}
           {isAuthenticated && (
             <>
               <Link

@@ -4,6 +4,7 @@ import { isAuthenticatedServer } from "@/lib/auth";
 import { getNoteBySlug } from "@/lib/notes";
 import { MarkdownRenderer } from "@/components/notes/MarkdownRenderer";
 import { DeleteNoteButton } from "@/components/notes/DeleteNoteButton";
+import GalaxyPageBackground from "@/components/background/GalaxyPageBackground";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,9 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
   const category = note.category as any;
 
   return (
-    <div className="max-w-3xl mx-auto px-8 py-10">
+    <div className="relative">
+      <GalaxyPageBackground />
+      <div className="relative z-10 max-w-3xl mx-auto px-8 py-10">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-10">
         <Link href="/notes" className="text-sm text-text-muted hover:text-text-primary transition-colors">
@@ -152,6 +155,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
           </div>
         )}
       </article>
+      </div>
     </div>
   );
 }

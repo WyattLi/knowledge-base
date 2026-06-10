@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Info } from 'lucide-react';
+import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Info, Search } from 'lucide-react';
 import GalaxyCanvas, { buildGalaxyNodes } from '@/components/graph/GalaxyCanvas';
 import { NoteDetailPanel } from '@/components/graph/NoteDetailPanel';
 import CategoryLegend, { type CategoryLegendEntry } from '@/components/graph/CategoryLegend';
@@ -19,6 +19,7 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showTip, setShowTip] = useState(true);
+  const [searchText, setSearchText] = useState('');
 
   // Build galaxy nodes from API data
   const allGalaxyNodes = useMemo(() => {
@@ -26,11 +27,18 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
     return buildGalaxyNodes(data.nodes, nodePositions, data.edges);
   }, [data, nodePositions, ready]);
 
-  // Filter by category (tag color) if active
+  // Filter by category + search text
   const filteredGalaxyNodes = useMemo(() => {
-    if (!activeCategory) return allGalaxyNodes;
-    return allGalaxyNodes.filter(n => n.color.core === activeCategory);
-  }, [allGalaxyNodes, activeCategory]);
+    let result = allGalaxyNodes;
+    if (activeCategory) {
+      result = result.filter(n => n.color.core === activeCategory);
+    }
+    if (searchText.trim()) {
+      const q = searchText.trim().toLowerCase();
+      result = result.filter(n => n.title.toLowerCase().includes(q));
+    }
+    return result;
+  }, [allGalaxyNodes, activeCategory, searchText]);
 
   // Filter edges to only those connecting visible nodes
   const visibleNodeIds = useMemo(() => new Set(filteredGalaxyNodes.map(n => n.id)), [filteredGalaxyNodes]);
@@ -72,7 +80,7 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-blue-400 animate-spin" />
           <p className="text-white/30 text-sm">星图加载中...</p>
@@ -83,14 +91,14 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black flex items-center justify-center">
         <p className="text-red-400 text-sm">加载失败: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden z-50" style={{ background: '#000000', cursor: 'none' }}>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: '#000000', cursor: 'none' }}>
       <SpotlightCursor />
 
       {/* 3D Galaxy Canvas */}
@@ -104,31 +112,57 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
       />
 
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-30 px-5 pt-5 pb-3 flex items-start justify-between pointer-events-none">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(100,160,255,0.1)', border: '1px solid rgba(100,160,255,0.25)', boxShadow: '0 0 12px rgba(100,160,255,0.2)' }}>
+      <header className="absolute top-0 left-0 right-0 z-30 px-5 pt-5 pb-3 flex items-center justify-between">
+        {/* Left: Logo + Search */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: 'rgba(100,160,255,0.1)',
+              border: '1px solid rgba(100,160,255,0.25)',
+              boxShadow: '0 0 12px rgba(100,160,255,0.2)',
+            }}
+          >
             <Sparkles size={18} style={{ color: '#64a8ff' }} />
           </div>
-          <div>
-            <h1 className="text-base md:text-lg font-semibold" style={{ color: 'rgba(220,235,255,0.95)', textShadow: '0 0 20px rgba(100,160,255,0.4)' }}>
-              知识星系
-            </h1>
-            <p className="text-xs text-white/30">个人知识库 · 图谱可视化</p>
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="搜索节点..."
+              className="w-36 md:w-48 h-9 pl-9 pr-3 rounded-lg text-sm outline-none transition-all"
+              style={{
+                background: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(100,160,255,0.5)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(100,160,255,0.15)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            />
           </div>
         </div>
-        <div className="flex items-center gap-4 md:gap-6 text-right">
+
+        {/* Right: Stats */}
+        <div className="flex items-center gap-3 md:gap-5 text-right shrink-0">
           <div>
-            <div className="text-lg font-bold" style={{ color: '#64b8ff', textShadow: '0 0 10px rgba(100,184,255,0.5)' }}>
-              {data?.nodes.length || 0}
+            <div className="text-base font-bold" style={{ color: '#64b8ff', textShadow: '0 0 10px rgba(100,184,255,0.5)' }}>
+              {filteredGalaxyNodes.length}
             </div>
-            <div className="text-xs text-white/30">知识节点</div>
+            <div className="text-[10px] text-white/30">节点</div>
           </div>
           <div>
-            <div className="text-lg font-bold" style={{ color: '#c084fc', textShadow: '0 0 10px rgba(192,132,252,0.5)' }}>
+            <div className="text-base font-bold" style={{ color: '#c084fc', textShadow: '0 0 10px rgba(192,132,252,0.5)' }}>
               {totalConnections}
             </div>
-            <div className="text-xs text-white/30">知识连接</div>
+            <div className="text-[10px] text-white/30">连接</div>
           </div>
         </div>
       </header>

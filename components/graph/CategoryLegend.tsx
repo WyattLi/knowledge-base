@@ -35,7 +35,7 @@ const CategoryLegend: React.FC<CategoryLegendProps> = ({
         }}
       >
         <div className="text-xs text-white/30 mb-2 font-medium tracking-wider uppercase">
-          知识分类
+          知识标签
         </div>
         {entries.map((entry) => {
           const isActive = activeEntry === entry.core;

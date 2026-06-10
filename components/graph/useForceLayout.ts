@@ -20,7 +20,7 @@ function hashZ(id: string): number {
   for (let i = 0; i < id.length; i++) {
     h = ((h << 5) - h + id.charCodeAt(i)) | 0;
   }
-  return ((h % 100) / 100) * 80 - 40;
+  return ((h % 100) / 100) * 160 - 80;
 }
 
 export function useForceLayout(data: GraphData | null): LayoutResult & { ready: boolean } {
@@ -60,7 +60,7 @@ export function useForceLayout(data: GraphData | null): LayoutResult & { ready: 
     }
 
     // 2D circular initial positions
-    const radius = Math.sqrt(data.nodes.length) * 2;
+    const radius = Math.sqrt(data.nodes.length) * 8;
     data.nodes.forEach((n, i) => {
       const angle = (2 * Math.PI * i) / data.nodes.length;
       (n as any)._ix = Math.cos(angle) * radius;
@@ -70,10 +70,10 @@ export function useForceLayout(data: GraphData | null): LayoutResult & { ready: 
     const sim = forceSimulation(
       data.nodes.map(n => ({ id: n.id, x: (n as any)._ix, y: (n as any)._iy }))
     )
-      .force("link", forceLink(simEdges).id((d: any) => d.id).distance(25).strength(0.3))
-      .force("charge", forceManyBody().strength(-80))
+      .force("link", forceLink(simEdges).id((d: any) => d.id).distance(120).strength(0.1))
+      .force("charge", forceManyBody().strength(-400))
       .force("center", forceCenter(0, 0))
-      .force("collide", forceCollide(8))
+      .force("collide", forceCollide(15))
       .stop();
 
     if (tagEdges.length > 0) {

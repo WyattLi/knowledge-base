@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { notes, noteLinks, noteTags, tags } from "./schema";
+import { notes, noteLinks, noteTags, tags, noteContent } from "./schema";
 import { eq, and, or, isNotNull, sql, inArray } from "drizzle-orm";
 import { getDescendantIds } from "./categories";
 
@@ -12,6 +12,7 @@ export interface GraphNode {
   wordCount: number;
   linkCount: number;
   citationCount: number;
+  summary?: string;
 }
 
 export interface GraphEdge {
@@ -76,6 +77,14 @@ export async function getGraphData(filter?: {
     tagsByNote.get(t.noteId)!.push({ id: t.tagId, name: t.tagName, slug: t.tagSlug!, color: t.tagColor! });
   }
 
+  // Fetch summaries
+  const allContent = await db.select({ noteId: noteContent.noteId, summary: noteContent.summary })
+    .from(noteContent).where(inArray(noteContent.noteId, Array.from(noteIds)));
+  const summaryMap = new Map<string, string>();
+  for (const c of allContent) {
+    if (c.summary) summaryMap.set(c.noteId, c.summary);
+  }
+
   const nodes: GraphNode[] = allNotes.map(n => ({
     id: n.id,
     title: n.title,
@@ -85,6 +94,7 @@ export async function getGraphData(filter?: {
     wordCount: n.wordCount ?? 0,
     citationCount: citationCount.get(n.id) || 0,
     linkCount: (citationCount.get(n.id) || 0) + (outgoingCount.get(n.id) || 0),
+    summary: summaryMap.get(n.id),
   }));
 
   return { nodes, edges };

@@ -17,8 +17,8 @@ const ThemeContext = createContext<ThemeContextValue>({
 const STORAGE_KEY = "theme";
 
 function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return (localStorage.getItem(STORAGE_KEY) as Theme) || "light";
+  if (typeof window === "undefined") return "dark";
+  return (localStorage.getItem(STORAGE_KEY) as Theme) || "dark";
 }
 
 function applyTheme(theme: Theme) {
@@ -26,16 +26,14 @@ function applyTheme(theme: Theme) {
 }
 
 /** Inline script injected into <head> — runs before paint to prevent flash */
-const THEME_SCRIPT = `(function(){var t=localStorage.getItem("theme")||"light";document.documentElement.dataset.theme=t;})()`;
+const THEME_SCRIPT = `(function(){var t=localStorage.getItem("theme")||"dark";document.documentElement.dataset.theme=t;})()`;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
 
   useEffect(() => {
-    const stored = getStoredTheme();
-    setTheme(stored);
-    applyTheme(stored);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {

@@ -98,7 +98,7 @@ export function ExplorePageClient({ categoryId, tagId }: { categoryId?: string; 
   }
 
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ background: '#000000', cursor: 'none' }}>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: '#010712', cursor: 'none' }}>
       <SpotlightCursor />
 
       {/* 3D Galaxy Canvas */}

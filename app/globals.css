@@ -57,8 +57,8 @@
 
 /* ─── Dark Theme (Cosmic) ─── */
 [data-theme="dark"] {
-  --bg-primary: #000000;
-  --bg-secondary: #050510;
+  --bg-primary: #010712;
+  --bg-secondary: #071a31;
   --bg-elevated: rgba(255, 255, 255, 0.03);
 
   --text-primary: #e0dfe6;
@@ -70,16 +70,16 @@
   --accent-blue: #a5b4fc;
   --accent-gold: #fcd34d;
 
-  --surface: rgba(255, 255, 255, 0.04);
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --surface-active: rgba(255, 255, 255, 0.10);
+  --surface: rgba(5, 18, 36, 0.48);
+  --surface-hover: rgba(20, 63, 104, 0.34);
+  --surface-active: rgba(27, 96, 148, 0.32);
 
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-medium: rgba(255, 255, 255, 0.10);
-  --border-glow: rgba(139, 92, 246, 0.2);
+  --border-glow: rgba(73, 220, 255, 0.18);
 
   --backdrop: rgba(0, 0, 0, 0.6);
-  --shadow-color: rgba(0, 0, 0, 0.5);
+  --shadow-color: rgba(0, 6, 18, 0.58);
 }
 
 /* ─── Light Theme (Warm Gray) ─── */
@@ -143,9 +143,12 @@ body {
   overflow-x: hidden;
 }
 
-/* Dark theme — pure black, no gradients (star map unified) */
+/* Dark theme — deep navy with central blue nebula glow; canvas adds detailed starfield */
 [data-theme="dark"] body {
-  background: var(--bg-primary);
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 42%, rgba(31, 142, 207, 0.14), transparent 65%),
+    radial-gradient(ellipse 35% 50% at 45% 46%, rgba(14, 162, 214, 0.08), transparent 55%),
+    var(--bg-primary);
 }
 
 

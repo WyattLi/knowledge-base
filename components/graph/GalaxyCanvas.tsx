@@ -69,10 +69,10 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = React.useState({ w: 0, h: 0 });
 
-  // Init background stars
+  // Init background stars — dense starfield
   useEffect(() => {
     const stars = [];
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 500; i++) {
       stars.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
@@ -98,14 +98,15 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
     return () => { ro.disconnect(); window.removeEventListener('resize', update); };
   }, []);
 
-  // Nebula background
+  // Blue nebula — matching reference image tones
   const drawNebula = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
     const nebulaData = [
-      { x: w * 0.3, y: h * 0.4, r: 350, color: 'rgba(40,60,160,0.07)' },
-      { x: w * 0.65, y: h * 0.35, r: 280, color: 'rgba(80,20,140,0.06)' },
-      { x: w * 0.5, y: h * 0.6, r: 400, color: 'rgba(20,80,120,0.05)' },
-      { x: w * 0.15, y: h * 0.7, r: 220, color: 'rgba(60,30,100,0.06)' },
-      { x: w * 0.8, y: h * 0.7, r: 260, color: 'rgba(30,60,80,0.06)' },
+      { x: w * 0.50, y: h * 0.40, r: Math.max(w * 0.35, 280), color: 'rgba(15,72,116,0.09)' },
+      { x: w * 0.56, y: h * 0.28, r: Math.max(w * 0.22, 200), color: 'rgba(31,142,207,0.07)' },
+      { x: w * 0.38, y: h * 0.48, r: Math.max(w * 0.20, 180), color: 'rgba(14,162,214,0.06)' },
+      { x: w * 0.50, y: h * 0.55, r: Math.max(w * 0.28, 240), color: 'rgba(7,100,180,0.07)' },
+      { x: w * 0.30, y: h * 0.32, r: Math.max(w * 0.18, 160), color: 'rgba(34,211,238,0.05)' },
+      { x: w * 0.68, y: h * 0.38, r: Math.max(w * 0.16, 150), color: 'rgba(45,160,220,0.06)' },
     ];
     nebulaData.forEach(({ x, y, r, color }) => {
       const drift = Math.sin(t * 0.0003) * 15;
@@ -167,7 +168,7 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
 
       const fl = 900 * zoomRef.current;
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#010712';
       ctx.fillRect(0, 0, w, h);
 
       drawNebula(ctx, w, h, t);

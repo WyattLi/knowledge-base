@@ -5,9 +5,23 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
+/** Convert [[target]] and [[target|alias]] wikilinks to clickable markdown links */
+function resolveWikilinks(content: string): string {
+  return content.replace(
+    /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g,
+    (_, target: string, alias: string) => {
+      const slug = target.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w一-鿿\-]/g, "");
+      const label = (alias || target).trim();
+      return `[${label}](/notes/${slug})`;
+    },
+  );
+}
+
 export function MarkdownRenderer({ content }: { content: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  const processed = resolveWikilinks(content);
 
   return (
     <div
@@ -35,7 +49,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
       >
-        {content}
+        {processed}
       </Markdown>
     </div>
   );

@@ -274,7 +274,8 @@ export default function GraphCanvas({
 
   /** Get current position of a node (dragged override or force layout) */
   const getNodePos = (id: string): [number, number] | undefined => {
-    return nodeDragOffsets.current.get(id) || nodePositions.get(id);
+    const pos3d = nodePositions.get(id);
+    return nodeDragOffsets.current.get(id) || (pos3d ? [pos3d[0], pos3d[1]] : undefined);
   };
 
   const findNode = (wx: number, wy: number): GraphNode | null => {

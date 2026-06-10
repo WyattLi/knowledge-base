@@ -42,11 +42,14 @@ async function syncNoteLinks(noteId: string, content: string) {
     .from(notes);
 
   const slugToId = new Map(existingNotes.map(n => [n.slug, n.id]));
+  // Also support [[中文标题]] typed as-is by slugifying the target
+  const resolveTarget = (target: string): string | null =>
+    slugToId.get(target) || slugToId.get(makeSlug(target)) || null;
 
   const rows = links.map(l => ({
     id: uuid(),
     sourceNoteId: noteId,
-    targetNoteId: slugToId.get(l.target) || null,
+    targetNoteId: resolveTarget(l.target) || null,
     targetSlug: l.target,
     context: l.context,
   }));

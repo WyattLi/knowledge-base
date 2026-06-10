@@ -11,16 +11,16 @@ import {
 import type { GraphData } from "./types";
 
 export interface LayoutResult {
-  nodePositions: Map<string, [number, number]>;
+  nodePositions: Map<string, [number, number, number]>;
   edgeWeights: Map<string, number>;
 }
 
-function hashOffset(id: string): number {
+function hashZ(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) {
     h = ((h << 5) - h + id.charCodeAt(i)) | 0;
   }
-  return (h % 100) / 100 * 0.4 - 0.2;
+  return ((h % 100) / 100) * 80 - 40;
 }
 
 export function useForceLayout(data: GraphData | null): LayoutResult & { ready: boolean } {
@@ -82,10 +82,10 @@ export function useForceLayout(data: GraphData | null): LayoutResult & { ready: 
 
     for (let i = 0; i < 300; i++) sim.tick();
 
-    const nodePositions = new Map<string, [number, number]>();
+    const nodePositions = new Map<string, [number, number, number]>();
     for (const node of sim.nodes()) {
-      const offset = hashOffset(node.id as string);
-      nodePositions.set(node.id as string, [node.x || 0, (node.y || 0) + offset]);
+      const z = hashZ(node.id as string);
+      nodePositions.set(node.id as string, [node.x || 0, node.y || 0, z]);
     }
 
     return { nodePositions, edgeWeights, ready: true };

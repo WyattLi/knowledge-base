@@ -69,10 +69,10 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = React.useState({ w: 0, h: 0 });
 
-  // Init background stars — dense starfield
+  // Init background stars — denser than V1
   useEffect(() => {
     const stars = [];
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 900; i++) {
       stars.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
@@ -98,15 +98,22 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
     return () => { ro.disconnect(); window.removeEventListener('resize', update); };
   }, []);
 
-  // Blue nebula — matching reference image tones
+  // Blue nebula — dominant coverage, brightest at bottom
   const drawNebula = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
     const nebulaData = [
-      { x: w * 0.50, y: h * 0.40, r: Math.max(w * 0.35, 280), color: 'rgba(15,72,116,0.09)' },
-      { x: w * 0.56, y: h * 0.28, r: Math.max(w * 0.22, 200), color: 'rgba(31,142,207,0.07)' },
-      { x: w * 0.38, y: h * 0.48, r: Math.max(w * 0.20, 180), color: 'rgba(14,162,214,0.06)' },
-      { x: w * 0.50, y: h * 0.55, r: Math.max(w * 0.28, 240), color: 'rgba(7,100,180,0.07)' },
-      { x: w * 0.30, y: h * 0.32, r: Math.max(w * 0.18, 160), color: 'rgba(34,211,238,0.05)' },
-      { x: w * 0.68, y: h * 0.38, r: Math.max(w * 0.16, 150), color: 'rgba(45,160,220,0.06)' },
+      // Wide band
+      { x: w * 0.45, y: h * 0.68, r: Math.max(w * 0.52, 400), color: 'rgba(15,72,116,0.10)' },
+      { x: w * 0.55, y: h * 0.72, r: Math.max(w * 0.48, 360), color: 'rgba(20,80,150,0.08)' },
+      { x: w * 0.50, y: h * 0.55, r: Math.max(w * 0.60, 450), color: 'rgba(31,142,207,0.07)' },
+      // Left bright spot
+      { x: w * 0.33, y: h * 0.66, r: Math.max(w * 0.28, 220), color: 'rgba(45,160,220,0.10)' },
+      { x: w * 0.28, y: h * 0.72, r: Math.max(w * 0.22, 180), color: 'rgba(14,162,214,0.08)' },
+      // Center bright spot — brightest
+      { x: w * 0.49, y: h * 0.65, r: Math.max(w * 0.34, 270), color: 'rgba(60,180,240,0.11)' },
+      { x: w * 0.50, y: h * 0.75, r: Math.max(w * 0.38, 300), color: 'rgba(7,100,180,0.09)' },
+      // Right bright spot
+      { x: w * 0.71, y: h * 0.62, r: Math.max(w * 0.28, 220), color: 'rgba(45,160,220,0.10)' },
+      { x: w * 0.76, y: h * 0.68, r: Math.max(w * 0.22, 180), color: 'rgba(14,162,214,0.08)' },
     ];
     nebulaData.forEach(({ x, y, r, color }) => {
       const drift = Math.sin(t * 0.0003) * 15;

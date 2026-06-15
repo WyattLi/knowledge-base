@@ -28,10 +28,10 @@ const CategoryLegend: React.FC<CategoryLegendProps> = ({
       <div
         className="rounded-xl p-3 md:p-4 space-y-2"
         style={{
-          background: 'rgba(0,0,0,0.7)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(16px)',
-          boxShadow: '0 0 20px rgba(80,120,255,0.08), 0 8px 32px rgba(0,0,0,0.5)',
+          background: 'rgba(1,7,18,0.65)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 0 20px rgba(31,142,207,0.08), 0 8px 32px rgba(0,0,0,0.5)',
         }}
       >
         <div className="text-xs text-white/30 mb-2 font-medium tracking-wider uppercase">

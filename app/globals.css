@@ -143,11 +143,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Dark theme — deep navy with central blue nebula glow; canvas adds detailed starfield */
+/* Dark theme — dominant nebula matching reference image proportions */
 [data-theme="dark"] body {
   background:
-    radial-gradient(ellipse 55% 40% at 50% 42%, rgba(31, 142, 207, 0.14), transparent 65%),
-    radial-gradient(ellipse 35% 50% at 45% 46%, rgba(14, 162, 214, 0.08), transparent 55%),
+    radial-gradient(ellipse 70% 40% at 45% 68%, rgba(15, 72, 116, 0.22), transparent 72%),
+    radial-gradient(ellipse 60% 35% at 55% 72%, rgba(20, 80, 150, 0.18), transparent 70%),
+    radial-gradient(ellipse 38% 34% at 33% 66%, rgba(45, 160, 220, 0.16), transparent 58%),
+    radial-gradient(ellipse 42% 30% at 49% 65%, rgba(60, 180, 240, 0.18), transparent 55%),
+    radial-gradient(ellipse 38% 34% at 71% 62%, rgba(45, 160, 220, 0.16), transparent 58%),
     var(--bg-primary);
 }
 

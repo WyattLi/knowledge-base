@@ -6,25 +6,28 @@ import React from 'react';
 export default function GalaxyPageBackground() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: '#010712' }}>
-      {/* 蓝色星云层 */}
+      {/* 蓝色星云 — 比例匹配参考图：大面积覆盖，底部最亮 */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 50% 30% at 50% 40%, rgba(15, 72, 116, 0.18) 0%, transparent 70%),
-            radial-gradient(ellipse 35% 25% at 55% 28%, rgba(31, 142, 207, 0.12) 0%, transparent 65%),
-            radial-gradient(ellipse 25% 30% at 38% 48%, rgba(14, 162, 214, 0.10) 0%, transparent 60%),
-            radial-gradient(ellipse 40% 20% at 50% 55%, rgba(7, 100, 180, 0.10) 0%, transparent 60%),
-            radial-gradient(ellipse 20% 25% at 30% 32%, rgba(34, 211, 238, 0.08) 0%, transparent 55%),
-            radial-gradient(ellipse 18% 28% at 68% 38%, rgba(45, 160, 220, 0.09) 0%, transparent 55%),
-            radial-gradient(ellipse 30% 15% at 45% 62%, rgba(20, 80, 150, 0.08) 0%, transparent 55%),
-            radial-gradient(ellipse 16% 30% at 55% 46%, rgba(60, 180, 240, 0.06) 0%, transparent 50%)
+            radial-gradient(ellipse 70% 40% at 45% 68%, rgba(15, 72, 116, 0.24) 0%, transparent 75%),
+            radial-gradient(ellipse 60% 35% at 55% 72%, rgba(20, 80, 150, 0.20) 0%, transparent 72%),
+            radial-gradient(ellipse 75% 45% at 50% 55%, rgba(31, 142, 207, 0.14) 0%, transparent 68%),
+            radial-gradient(ellipse 38% 36% at 33% 66%, rgba(45, 160, 220, 0.20) 0%, transparent 62%),
+            radial-gradient(ellipse 44% 32% at 49% 65%, rgba(60, 180, 240, 0.22) 0%, transparent 60%),
+            radial-gradient(ellipse 38% 36% at 71% 62%, rgba(45, 160, 220, 0.20) 0%, transparent 62%),
+            radial-gradient(ellipse 48% 28% at 50% 75%, rgba(7, 100, 180, 0.15) 0%, transparent 58%),
+            radial-gradient(ellipse 28% 30% at 28% 72%, rgba(14, 162, 214, 0.14) 0%, transparent 55%),
+            radial-gradient(ellipse 28% 30% at 76% 68%, rgba(14, 162, 214, 0.14) 0%, transparent 55%),
+            radial-gradient(ellipse 30% 24% at 25% 58%, rgba(34, 211, 238, 0.10) 0%, transparent 52%),
+            radial-gradient(ellipse 30% 24% at 78% 56%, rgba(34, 211, 238, 0.10) 0%, transparent 52%)
           `
         }}
       />
-      {/* 密集静态星光 */}
+      {/* 密集静态星光 — 翻倍 */}
       <div className="absolute inset-0 opacity-40">
-        {Array.from({ length: 120 }).map((_, i) => {
+        {Array.from({ length: 240 }).map((_, i) => {
           const x = ((i * 137 + 53) % 100);
           const y = ((i * 251 + 97) % 100);
           const size = ((i * 73) % 3) * 0.4 + 0.6;

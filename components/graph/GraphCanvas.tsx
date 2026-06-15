@@ -447,7 +447,7 @@ export default function GraphCanvas({
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="搜索节点..."
+          placeholder="搜索笔记..."
           className="w-40 glass rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
         />
         {search && <span className="text-xs text-text-muted">{searchMatches.size} 个匹配</span>}

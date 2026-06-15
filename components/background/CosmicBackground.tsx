@@ -89,8 +89,8 @@ export default function CosmicBackground() {
       meteors.length = 0;
       nebulas.length = 0;
 
-      // 密集星场 — 参考图约 1 星 / 1500px²
-      const starCount = Math.max(600, Math.floor((width * height) / 1500));
+      // 密集星场 — 比 V1 多一倍
+      const starCount = Math.max(1200, Math.floor((width * height) / 800));
       for (let i = 0; i < starCount; i++) {
         farStars.push({
           x: Math.random() * width,
@@ -103,8 +103,8 @@ export default function CosmicBackground() {
         });
       }
 
-      // 亮星+光晕 — 参考图中等亮度星
-      const brightCount = Math.max(100, Math.floor((width * height) / 12000));
+      // 亮星+光晕 — 翻倍
+      const brightCount = Math.max(220, Math.floor((width * height) / 5500));
       for (let i = 0; i < brightCount; i++) {
         nearStars.push({
           x: Math.random() * width,
@@ -119,16 +119,30 @@ export default function CosmicBackground() {
         });
       }
 
-      // 蓝色星云簇 — 位于中上部
+      // 蓝色星云 — 比例匹配参考图：覆盖大部分画面，底部最亮
+      // 底部宽星云带 — 覆盖全宽
       nebulas.push(
-        { x: width * 0.50, y: height * 0.40, rx: width * 0.35, ry: height * 0.28, ...NEBULA_BLUES[0], driftPhase: 0 },
-        { x: width * 0.56, y: height * 0.28, rx: width * 0.22, ry: height * 0.22, ...NEBULA_BLUES[1], driftPhase: 1.7 },
-        { x: width * 0.38, y: height * 0.48, rx: width * 0.20, ry: height * 0.24, ...NEBULA_BLUES[2], driftPhase: 3.2 },
-        { x: width * 0.50, y: height * 0.55, rx: width * 0.28, ry: height * 0.18, ...NEBULA_BLUES[3], driftPhase: 4.1 },
-        { x: width * 0.30, y: height * 0.32, rx: width * 0.18, ry: height * 0.20, ...NEBULA_BLUES[4], driftPhase: 5.5 },
-        { x: width * 0.68, y: height * 0.38, rx: width * 0.16, ry: height * 0.21, ...NEBULA_BLUES[5], driftPhase: 2.3 },
-        { x: width * 0.45, y: height * 0.62, rx: width * 0.24, ry: height * 0.15, ...NEBULA_BLUES[6], driftPhase: 6.0 },
-        { x: width * 0.55, y: height * 0.46, rx: width * 0.14, ry: height * 0.26, ...NEBULA_BLUES[7], driftPhase: 3.8 },
+        { x: width * 0.45, y: height * 0.68, rx: width * 0.55, ry: height * 0.35, ...NEBULA_BLUES[0], driftPhase: 0 },
+        { x: width * 0.55, y: height * 0.72, rx: width * 0.50, ry: height * 0.32, ...NEBULA_BLUES[6], driftPhase: 1.5 },
+        { x: width * 0.50, y: height * 0.55, rx: width * 0.65, ry: height * 0.40, ...NEBULA_BLUES[1], driftPhase: 2.8 },
+      );
+      // 左亮斑 (33%, 68%) — 放大
+      nebulas.push(
+        { x: width * 0.33, y: height * 0.66, rx: width * 0.30, ry: height * 0.32, ...NEBULA_BLUES[5], driftPhase: 2.5 },
+        { x: width * 0.28, y: height * 0.72, rx: width * 0.24, ry: height * 0.28, ...NEBULA_BLUES[2], driftPhase: 3.3 },
+        { x: width * 0.25, y: height * 0.58, rx: width * 0.22, ry: height * 0.26, ...NEBULA_BLUES[4], driftPhase: 5.8 },
+      );
+      // 中亮斑 (49%, 67%) — 最亮最大
+      nebulas.push(
+        { x: width * 0.49, y: height * 0.65, rx: width * 0.36, ry: height * 0.30, ...NEBULA_BLUES[7], driftPhase: 4.0 },
+        { x: width * 0.50, y: height * 0.75, rx: width * 0.40, ry: height * 0.24, ...NEBULA_BLUES[3], driftPhase: 5.2 },
+        { x: width * 0.48, y: height * 0.56, rx: width * 0.28, ry: height * 0.22, ...NEBULA_BLUES[0], driftPhase: 1.0 },
+      );
+      // 右亮斑 (71%, 60%)
+      nebulas.push(
+        { x: width * 0.71, y: height * 0.62, rx: width * 0.30, ry: height * 0.32, ...NEBULA_BLUES[5], driftPhase: 1.8 },
+        { x: width * 0.76, y: height * 0.68, rx: width * 0.24, ry: height * 0.28, ...NEBULA_BLUES[2], driftPhase: 4.5 },
+        { x: width * 0.78, y: height * 0.56, rx: width * 0.22, ry: height * 0.26, ...NEBULA_BLUES[4], driftPhase: 6.3 },
       );
 
       // 流星

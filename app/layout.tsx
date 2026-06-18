@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import CosmicBackgroundWrapper from "@/components/background/CosmicBackgroundWrapper";
@@ -15,7 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="h-full flex flex-col relative overflow-hidden">
         <ThemeProvider>
           <CosmicBackgroundWrapper />
-          <AppShell>{children}</AppShell>
+          <Suspense fallback={null}>
+            <AppShell>{children}</AppShell>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

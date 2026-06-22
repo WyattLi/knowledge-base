@@ -161,6 +161,21 @@ export async function getNoteBySlug(slug: string) {
   };
 }
 
+/** Resolve a unique slug, appending -2, -3, ... if needed */
+async function uniqueSlug(base: string): Promise<string> {
+  let slug = base;
+  let attempt = 2;
+  while (true) {
+    const [existing] = await db
+      .select({ slug: notes.slug })
+      .from(notes)
+      .where(eq(notes.slug, slug))
+      .limit(1);
+    if (!existing) return slug;
+    slug = `${base}-${attempt++}`;
+  }
+}
+
 export async function createNote(data: {
   title: string;
   content: string;
@@ -171,7 +186,7 @@ export async function createNote(data: {
   summary?: string;
 }) {
   const id = uuid();
-  const slug = makeSlug(data.title);
+  const slug = await uniqueSlug(makeSlug(data.title));
   const now = new Date();
   const plainText = stripMarkdown(data.content);
   const cosKey = await makeNoteKey(data.categoryId || null, slug);

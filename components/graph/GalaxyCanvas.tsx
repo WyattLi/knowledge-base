@@ -287,11 +287,8 @@ const GalaxyCanvas: React.FC<GalaxyCanvasProps> = ({
           const labelY = sy + r + 14;
           ctx.font = `${Math.round(10 + scale * 2)}px OPPOSans4, PingFang SC, sans-serif`;
           ctx.textAlign = 'center';
-          ctx.shadowColor = colors.core;
-          ctx.shadowBlur = isSelected ? 12 : 6;
           ctx.fillStyle = isSelected ? colors.core : `rgba(255,255,255,${Math.min(1, effectiveOpacity * 1.2)})`;
           ctx.fillText(node.title, sx, labelY);
-          ctx.shadowBlur = 0;
         }
 
         hitTargets.push({ id: node.id, sx, sy, r: Math.max(r, 18) });

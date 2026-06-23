@@ -5,7 +5,6 @@ import { v4 as uuid } from "uuid";
 import slugify from "slugify";
 import { blobPut, blobGet, blobDelete, blobMove } from "./blob";
 import { makeNoteKey, getDescendantIds } from "./categories";
-import { generateSummary } from "./ai";
 
 /** Extract internal link targets from markdown: [[target]] and [text](target) — skips http URLs */
 function extractLinks(content: string): { target: string; context: string }[] {
@@ -41,18 +40,21 @@ async function syncNoteLinks(noteId: string, content: string) {
     .select({ id: notes.id, slug: notes.slug })
     .from(notes);
 
-  const slugToId = new Map(existingNotes.map(n => [n.slug, n.id]));
+  const slugToNote = new Map(existingNotes.map(n => [n.slug, n]));
   // Also support [[中文标题]] typed as-is by slugifying the target
-  const resolveTarget = (target: string): string | null =>
-    slugToId.get(target) || slugToId.get(makeSlug(target)) || null;
+  const resolveTarget = (target: string): { id: string; slug: string } | null =>
+    slugToNote.get(target) || slugToNote.get(makeSlug(target)) || null;
 
-  const rows = links.map(l => ({
-    id: uuid(),
-    sourceNoteId: noteId,
-    targetNoteId: resolveTarget(l.target) || null,
-    targetSlug: l.target,
-    context: l.context,
-  }));
+  const rows = links.map(l => {
+    const resolved = resolveTarget(l.target);
+    return {
+      id: uuid(),
+      sourceNoteId: noteId,
+      targetNoteId: resolved?.id ?? null,
+      targetSlug: resolved?.slug ?? makeSlug(l.target),
+      context: l.context,
+    };
+  });
 
   await db.insert(noteLinks).values(rows);
 }
@@ -218,9 +220,11 @@ export async function createNote(data: {
 
   // Fire-and-forget auto summary only if user didn't provide one
   if (!summary) {
-    generateSummary(data.title, data.content).then(async sum => {
-      await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, id));
-    }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+    import("./ai").then(({ generateSummary }) =>
+      generateSummary(data.title, data.content).then(async sum => {
+        await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, id));
+      })
+    ).catch(e => console.warn("[notes] summary generation failed:", e.message));
   }
 
   return getNoteBySlug(slug);
@@ -277,9 +281,12 @@ export async function updateNote(slug: string, data: {
 
     if (!data.summary) {
       const titleForSummary = updates.title ?? existing.title;
-      generateSummary(titleForSummary, data.content).then(async sum => {
-        await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, existing.id));
-      }).catch(e => console.warn("[notes] summary generation failed:", e.message));
+      const content = data.content; // narrowed to string by outer if
+      import("./ai").then(({ generateSummary }) =>
+        generateSummary(titleForSummary, content).then(async sum => {
+          await db.update(noteContent).set({ summary: sum, summaryAt: new Date() }).where(eq(noteContent.noteId, existing.id));
+        })
+      ).catch(e => console.warn("[notes] summary generation failed:", e.message));
     }
   } else if (newKey && existing.cosKey !== newKey) {
     // Slug/category changed but content didn't — move the blob

@@ -7,6 +7,7 @@ import { isAuthenticated } from "@/lib/auth";
 import { ingestUrl } from "@/lib/ai";
 import { createSource } from "@/lib/sources";
 import { createNote } from "@/lib/notes";
+import { createIngestTask, updateIngestTask, getIngestTask } from "@/lib/ingest-tasks";
 
 /**
  * Extract article content from HTML using Mozilla's Readability
@@ -100,23 +101,19 @@ async function tryDocsifyFallback(html: string, originalUrl: string, cookie?: st
   return null;
 }
 
-export async function POST(request: Request) {
-  if (!await isAuthenticated(request)) {
-    return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  }
-
+/**
+ * Background: execute the full ingest pipeline and update the task record.
+ */
+async function processIngestTask(taskId: string, url: string, categoryId: string | undefined, cookie: string | undefined) {
   try {
-    const { url, categoryId, cookie } = await request.json();
-    if (!url) {
-      return NextResponse.json({ error: "请提供网址" }, { status: 400 });
-    }
+    await updateIngestTask(taskId, { status: "processing" });
 
     // 1. Fetch the URL
     const fetchResult = await safeFetch(url, cookie);
     if (!fetchResult.ok) {
       const detail = fetchResult.error || `HTTP ${fetchResult.status}`;
-      console.error(`[ai/ingest] fetch failed for "${url}": ${detail}`);
-      return NextResponse.json({ error: `无法访问该网址: ${detail}` }, { status: 400 });
+      await updateIngestTask(taskId, { status: "failed", error: `无法访问该网址: ${detail}` });
+      return;
     }
     const html = fetchResult.text;
 
@@ -129,7 +126,6 @@ export async function POST(request: Request) {
       pageTitle = article.title;
       rawText = article.textContent;
     } else {
-      // Readability failed — try simple HTML-to-text as fallback (works for SSR SPAs)
       const plainText = html
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
@@ -148,13 +144,11 @@ export async function POST(request: Request) {
         pageTitle = (titleMatch?.[1] || "").replace(/\s*[-–|].*$/, "").trim() || article?.title || "";
         rawText = plainText;
       } else {
-        // 3. Both failed — try docsify fallback
         console.log(`[ai/ingest] Readability + text extraction both failed, trying docsify fallback...`);
         const fallback = await tryDocsifyFallback(html, url, cookie);
         if (!fallback) {
-          return NextResponse.json({
-            error: "无法从该网页提取有效内容。可能是页面需要登录、内容由 JS 动态加载、或为纯图片页面。",
-          }, { status: 400 });
+          await updateIngestTask(taskId, { status: "failed", error: "无法从该网页提取有效内容。可能是页面需要登录、内容由 JS 动态加载、或为纯图片页面。" });
+          return;
         }
         pageTitle = fallback.title;
         rawText = fallback.content;
@@ -162,24 +156,26 @@ export async function POST(request: Request) {
     }
 
     if (!rawText || rawText.length < 50) {
-      return NextResponse.json({ error: "提取的内容太少，无法生成笔记" }, { status: 400 });
+      await updateIngestTask(taskId, { status: "failed", error: "提取的内容太少，无法生成笔记" });
+      return;
     }
 
-    // 4. Call DeepSeek via skill template
+    // 3. Call DeepSeek via skill template
     const result = await ingestUrl(url, pageTitle, rawText);
 
     if (!result.markdownContent) {
-      return NextResponse.json({ error: "AI 未能生成笔记内容" }, { status: 500 });
+      await updateIngestTask(taskId, { status: "failed", error: "AI 未能生成笔记内容" });
+      return;
     }
 
-    // 5. Create source record
+    // 4. Create source record
     const source = await createSource({
       url,
       title: pageTitle,
       summary: result.sourceSummary,
     });
 
-    // 6. Create note as DRAFT — user reviews and publishes manually
+    // 5. Create note as DRAFT
     const note = await createNote({
       title: result.suggestedTitle,
       content: result.markdownContent,
@@ -188,7 +184,59 @@ export async function POST(request: Request) {
       status: "draft",
     });
 
-    return NextResponse.json(note, { status: 201 });
+    if (!note) {
+      await updateIngestTask(taskId, { status: "failed", error: "笔记创建失败" });
+      return;
+    }
+
+    await updateIngestTask(taskId, { status: "completed", noteId: note.id, noteSlug: note.slug });
+
+  } catch (e: any) {
+    console.error("[ai/ingest] error:", e.message);
+    await updateIngestTask(taskId, { status: "failed", error: e.message || "摄入失败" });
+  }
+}
+
+// ─── GET: check task status ───
+export async function GET(request: Request) {
+  if (!await isAuthenticated(request)) {
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const taskId = searchParams.get("taskId");
+  if (!taskId) {
+    return NextResponse.json({ error: "请提供 taskId" }, { status: 400 });
+  }
+
+  const task = await getIngestTask(taskId);
+  if (!task) {
+    return NextResponse.json({ error: "任务不存在" }, { status: 404 });
+  }
+
+  return NextResponse.json(task);
+}
+
+// ─── POST: create ingest task (async) ───
+export async function POST(request: Request) {
+  if (!await isAuthenticated(request)) {
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  }
+
+  try {
+    const { url, categoryId, cookie } = await request.json();
+    if (!url) {
+      return NextResponse.json({ error: "请提供网址" }, { status: 400 });
+    }
+
+    const task = await createIngestTask(url);
+
+    // Fire background processing — do NOT await
+    processIngestTask(task.id, url, categoryId, cookie).catch(e =>
+      console.error("[ai/ingest] background task crashed:", e)
+    );
+
+    return NextResponse.json({ taskId: task.id }, { status: 202 });
   } catch (e: any) {
     console.error("[ai/ingest] error:", e.message);
     return NextResponse.json({ error: e.message || "摄入失败" }, { status: 500 });

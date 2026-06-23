@@ -135,3 +135,17 @@ export const operationLogs = mysqlTable("operation_logs", {
   index("idx_logs_timestamp").on(table.timestamp),
   index("idx_logs_type").on(table.type),
 ]);
+
+// ─── Ingest Tasks (async job queue) ───
+export const ingestTasks = mysqlTable("ingest_tasks", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  url: varchar("url", { length: 2048 }).notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  noteId: varchar("note_id", { length: 36 }),
+  noteSlug: varchar("note_slug", { length: 255 }),
+  error: text("error"),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_ingest_tasks_status").on(table.status),
+]);

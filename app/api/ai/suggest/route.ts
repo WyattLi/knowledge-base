@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import { generateSummary, suggestRelatedNotes } from "@/lib/ai";

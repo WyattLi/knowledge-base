@@ -22,6 +22,7 @@ export function IngestForm() {
     setError("");
 
     try {
+      // 1. Create ingest task (returns immediately)
       const res = await fetch("/api/ai/ingest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,14 +32,41 @@ export function IngestForm() {
         }),
       });
 
-      if (res.ok) {
-        const note = await res.json();
-        router.push(`/notes/${note.slug}/edit`);
-        router.refresh();
-      } else {
-        const d = await res.json();
-        setError(d.error || "摄入失败");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || "创建摄入任务失败");
+        setLoading(false);
+        return;
       }
+
+      const { taskId } = await res.json();
+
+      // 2. Poll until done or failed
+      let attempts = 0;
+      while (attempts < 120) {
+        await new Promise(r => setTimeout(r, 2000));
+        attempts++;
+
+        const pollRes = await fetch(`/api/ai/ingest?taskId=${taskId}`);
+        if (!pollRes.ok) continue;
+
+        const task = await pollRes.json();
+
+        if (task.status === "completed") {
+          router.push(`/notes/${task.noteSlug}/edit`);
+          router.refresh();
+          return;
+        }
+
+        if (task.status === "failed") {
+          setError(task.error || "摄入失败");
+          setLoading(false);
+          return;
+        }
+        // else: pending/processing — keep polling
+      }
+
+      setError("摄入超时，请稍后重试");
     } catch {
       setError("网络错误，请重试");
     }

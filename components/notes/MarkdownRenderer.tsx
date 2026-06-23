@@ -3,14 +3,17 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import slugify from "slugify";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
-/** Convert [[target]] and [[target|alias]] wikilinks to clickable markdown links */
+/** Convert [[target]] and [[target|alias]] wikilinks to clickable markdown links.
+ *  Uses the same slugify logic as lib/notes.ts:makeSlug() so URLs match. */
 function resolveWikilinks(content: string): string {
   return content.replace(
     /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g,
     (_, target: string, alias: string) => {
-      const slug = target.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w一-鿿\-]/g, "");
+      const raw = target.trim();
+      const slug = (slugify(raw, { lower: true, strict: true }) || raw).slice(0, 255);
       const label = (alias || target).trim();
       return `[${label}](/notes/${slug})`;
     },
